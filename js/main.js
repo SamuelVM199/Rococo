@@ -29,3 +29,9 @@ if (fotoHero) {
     fotoHero.style.opacity = Math.max(opacidad, 0);
   }, { passive: true });
 }
+
+/* Altura del header para hacer padding-top de main exacto */
+const header = document.querySelector('header');
+function setHh() { if (header) document.documentElement.style.setProperty('--hh', header.getBoundingClientRect().height + 'px'); }
+setHh();
+window.addEventListener('resize', setHh);
