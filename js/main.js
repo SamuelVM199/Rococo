@@ -20,3 +20,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   router.init();
 });
+
+/* Hero: opacidad de la foto al hacer scroll */
+const fotoHero = document.getElementById('foto');
+if (fotoHero) {
+  window.addEventListener('scroll', () => {
+    const opacidad = 1 - window.scrollY / (window.innerHeight * 0.8);
+    fotoHero.style.opacity = Math.max(opacidad, 0);
+  }, { passive: true });
+}
+
+/* Altura del header para hacer padding-top de main exacto */
+const header = document.querySelector('header');
+function setHh() { if (header) document.documentElement.style.setProperty('--hh', header.getBoundingClientRect().height + 'px'); }
+setHh();
+window.addEventListener('resize', setHh);
