@@ -120,19 +120,19 @@ export default function View(model, cb) {
     if (col.startsWith("conic")) col = "#c2334d";
     const multi = st.hilos.length > 1 ? q.hilos[st.hilos[1]].c : col;
     const W = sh.area.w * tam.k * (st.pos === "centro" ? 1 : 0.62);
-    let cx = sh.area.x, cy = st.area.y;
-    if (st.pos === "esquina") { cx += sh.area.w * 0.34; cy += sh.area.w * 0.32; }
-    if (st.pos === "arriba") { cx -= sh.area.w * 0.3; cy -= sh.area.w * 0.3; }
-    const hasImg = !!st.foto;
     let cx = sh.area.x, cy = sh.area.y;
+    if (st.pos === "esquina") { cx += sh.area.w * 0.34; cy += sh.area.w * 0.32; }
+    if (st.pos === "arriba")  { cx -= sh.area.w * 0.3;  cy -= sh.area.w * 0.3;  }
+    const hasImg = !!st.foto;
+    const imgH = W;
     const fs = Math.max(10, W / Math.max(4, txt.length * 0.55)) * le.k * 0.9;
     const totalH = imgH + (txt ? fs * 1.1 : 0);
     const top = cy - totalH / 2;
     let design = "";
     if (hasImg) design += `<image href="${st.foto}" x="${cx - imgH / 2}" y="${top}" width="${imgH}" height="${imgH}" preserveAspectRatio="xMidYMid meet"/>`;
-    if (txt) design += `<text x="${cx}" y="${top + imgH + fs * 0.85}" text-anchor="middle" font-family="${le.f}" font-size="${fs.toFixed(1)}" fill="${col}" stroke="${multi !== col ? 0.8 : 0}">${esc(txt)}</text>`;
+    if (txt)    design += `<text x="${cx}" y="${top + imgH + fs * 0.85}" text-anchor="middle" font-family="${le.f}" font-size="${fs.toFixed(1)}" fill="${col}" stroke-width="${multi !== col ? 0.8 : 0}" stroke="${multi}">${esc(txt)}</text>`;
     if (!hasImg && !txt) {
-      design = `<text x="${cx}" y="${cy}" text-anchor="middle" font-family="Nunito Sans, sans-serif" font-size="13" fill="${dark ? '#fbe9ef' : '#5c6485'}">Tu bordado aquí</text>`;
+      design = `<text x="${cx}" y="${cy}" text-anchor="middle" font-family="Quicksand, sans-serif" font-size="13" fill="${dark ? '#fdf0f5' : '#6b5f7a'}">Tu bordado aquí</text>`;
     }
     const r = Math.max(W, totalH) / 2 + 14;
     $("#pv").innerHTML = `<rect width="400" height="440" fill="transparent"/>${sh.draw(tela.c)}
