@@ -1,5 +1,9 @@
 /* Vista: renderizado del DOM. Recibe el modelo y el holder de callbacks (controlador). */
-export default function View(model, cb) {
+export default function View(model, initialCb) {
+  const self = {};
+  let cb = initialCb || {};
+  self.setController = (c) => { cb = c; };
+
   const $ = s => document.querySelector(s);
   const $$ = (s, fn) => document.querySelectorAll(s).forEach(fn);
 
@@ -9,36 +13,40 @@ export default function View(model, cb) {
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"
   }[c]));
   const contactURL = (msg) => {
-    if (cb.config.whatsapp) return "https://wa.me/" + cb.config.whatsapp + "?text=" + encodeURIComponent(msg);
-    return "https://ig.me/m/" + cb.config.instagram;
+    if (cb && cb.config && cb.config.whatsapp) return "https://wa.me/" + cb.config.whatsapp + "?text=" + encodeURIComponent(msg);
+    if (cb && cb.config && cb.config.instagram) return "https://ig.me/m/" + cb.config.instagram;
+    return "https://wa.me/529531754972?text=" + encodeURIComponent(msg);
   };
   const pedirMsg = p => `Hola, Rococó. Me interesa la pieza «${p.nombre}» que vi en su catálogo. ¿Me pueden dar precio y disponibilidad?`;
 
   /* ---- Catálogo ---- */
-  this.renderFilters = () => {
+  self.renderFilters = () => {
     const counts = model.getCounts();
     const opts = [["todo", "Todo"], ...Object.entries(model.getCats()).filter(([k]) => counts[k])];
     const el = $("#filters");
+    if (!el) return;
     el.innerHTML = opts.map(([k, l]) =>
       `<button class="chip" type="button" data-f="${k}" aria-pressed="${k === model.getFiltro()}">${l}<span class="n">${counts[k]}</span></button>`).join("");
     $$("#filters .chip", b => {
-      b.onclick = () => { cb.onFilter(b.dataset.f); };
+      b.onclick = () => { if (cb && cb.onFilter) cb.onFilter(b.dataset.f); };
     });
   };
 
-  this.renderGrid = () => {
+  self.renderGrid = () => {
     const list = model.getProductos();
     const grid = $("#grid");
+    if (!grid) return;
     const countEl = $("#catalog-count");
     if (countEl) {
       const f = model.getFiltro();
       const catName = f === "todo" ? "todas las categorías" : (model.getCats()[f] || f);
       countEl.textContent = `Mostrando ${list.length} ${list.length === 1 ? 'pieza' : 'piezas'} (${catName})`;
     }
+    const imgBase = (cb && cb.config && cb.config.imgBase) || "img";
     grid.innerHTML = list.map(p => `
       <article class="card">
         <button class="ph" type="button" data-i="${p.i}" aria-label="Ver detalles y fotos de ${p.nombre}">
-          <img src="${cb.config.imgBase}/${p.fotos[0]}" alt="${esc(p.desc)}" loading="lazy">
+          <img src="${imgBase}/${p.fotos[0]}" alt="${esc(p.desc)}" loading="lazy">
           ${p.personalizable ? '<span class="badge">Personalizable</span>' : ''}
           ${p.fotos.length > 1 ? `<span class="count">${p.fotos.length} fotos</span>` : ''}
         </button>
@@ -59,7 +67,7 @@ export default function View(model, cb) {
         <a class="btn btn-solid" href="${contactURL('Hola, Rococó. Quiero cotizar una pieza personalizada. Mi idea es: ')}" target="_blank" rel="noopener">Cotizar mi pieza</a>
       </div>`;
     $$(".ph", b => {
-      b.onclick = () => cb.onOpen(+b.dataset.i);
+      b.onclick = () => { if (cb && cb.onOpen) cb.onOpen(+b.dataset.i); };
     });
   };
 
@@ -68,7 +76,8 @@ export default function View(model, cb) {
   let curProduct = null;
   let curPhotoIdx = 0;
 
-  this.renderViewer = (p) => {
+  self.renderViewer = (p) => {
+    if (!dlg) return;
     curProduct = p;
     curPhotoIdx = 0;
     $("#dv-cat").textContent = model.getCats()[p.cat];
@@ -81,22 +90,31 @@ export default function View(model, cb) {
     rows.push(["Envío", "Local y nacional"]);
     $("#dv-dl").innerHTML = rows.map(([a, b]) => `<dt>${esc(a)}</dt><dd>${esc(b)}</dd>`).join("");
     $("#dv-btn").href = contactURL(pedirMsg(p));
-    $("#dv-btn").textContent = "Pedir por " + (cb.config.whatsapp ? "WhatsApp" : "mensaje directo");
+    const isWa = cb && cb.config && cb.config.whatsapp;
+    $("#dv-btn").textContent = "Pedir por " + (isWa ? "WhatsApp" : "mensaje directo");
     const thumbs = $("#dv-thumbs");
+    const imgBase = (cb && cb.config && cb.config.imgBase) || "img";
     thumbs.innerHTML = p.fotos.length > 1 ? p.fotos.map((f, k) =>
-      `<button type="button" aria-label="Ver foto ${k + 1} de ${p.fotos.length}" aria-current="${k === 0}"><img src="${cb.config.imgBase}/${f}" alt=""></button>`).join("") : "";
+      `<button type="button" aria-label="Ver foto ${k + 1} de ${p.fotos.length}" aria-current="${k === 0}"><img src="${imgBase}/${f}" alt=""></button>`).join("") : "";
     $$("#dv-thumbs button", (b, k) => {
-      b.onclick = () => { cb.onPhoto(p, k); };
+      b.onclick = () => {
+        if (cb && cb.onPhoto) cb.onPhoto(p, k);
+        else self.showPhoto(p, k);
+      };
     });
-    this.showPhoto(p, 0);
+    self.showPhoto(p, 0);
     if (typeof dlg.showModal === "function") dlg.showModal();
   };
 
-  this.showPhoto = (p, k) => {
+  self.showPhoto = (p, k) => {
     curProduct = p;
     curPhotoIdx = k;
-    $("#dv-img").src = cb.config.imgBase + "/" + p.fotos[k];
-    $("#dv-img").alt = `${p.nombre} · Foto ${k + 1} de ${p.fotos.length}`;
+    const imgBase = (cb && cb.config && cb.config.imgBase) || "img";
+    const dvImg = $("#dv-img");
+    if (dvImg) {
+      dvImg.src = imgBase + "/" + p.fotos[k];
+      dvImg.alt = `${p.nombre} · Foto ${k + 1} de ${p.fotos.length}`;
+    }
     const prev = $("#dv-prev");
     const next = $("#dv-next");
     const count = $("#dv-counter");
@@ -116,33 +134,36 @@ export default function View(model, cb) {
     prevBtn.onclick = () => {
       if (!curProduct || curProduct.fotos.length <= 1) return;
       const nextIdx = (curPhotoIdx - 1 + curProduct.fotos.length) % curProduct.fotos.length;
-      this.showPhoto(curProduct, nextIdx);
+      self.showPhoto(curProduct, nextIdx);
     };
   }
   if (nextBtn) {
     nextBtn.onclick = () => {
       if (!curProduct || curProduct.fotos.length <= 1) return;
       const nextIdx = (curPhotoIdx + 1) % curProduct.fotos.length;
-      this.showPhoto(curProduct, nextIdx);
+      self.showPhoto(curProduct, nextIdx);
     };
   }
   document.addEventListener("keydown", e => {
-    if (!dlg.open || !curProduct || curProduct.fotos.length <= 1) return;
+    if (!dlg || !dlg.open || !curProduct || curProduct.fotos.length <= 1) return;
     if (e.key === "ArrowLeft") {
       const nextIdx = (curPhotoIdx - 1 + curProduct.fotos.length) % curProduct.fotos.length;
-      this.showPhoto(curProduct, nextIdx);
+      self.showPhoto(curProduct, nextIdx);
     } else if (e.key === "ArrowRight") {
       const nextIdx = (curPhotoIdx + 1) % curProduct.fotos.length;
-      this.showPhoto(curProduct, nextIdx);
+      self.showPhoto(curProduct, nextIdx);
     }
   });
 
-  $("#dv-close").onclick = () => dlg.close();
-  dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+  const dvClose = $("#dv-close");
+  if (dvClose) dvClose.onclick = () => { if (dlg) dlg.close(); };
+  if (dlg) dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+
   /* ---- Cotizador ---- */
-  this.buildOpts = () => {
+  self.buildOpts = () => {
     const q = model.getQ();
     const chips = (el, items, name, type, isOn, label, extraClass = "") => {
+      if (!el) return;
       el.innerHTML = items.map((it, i) => `<label class="opt ${extraClass}"><input type="${type}" name="${name}" value="${it.id ?? i}" ${isOn(it, i) ? "checked" : ""}><span>${label(it, i)}</span></label>`).join("");
     };
     const sw = c => `<i class="sw" style="background:${c}"></i>`;
@@ -156,7 +177,7 @@ export default function View(model, cb) {
     chips($("#o-hilo"), q.hilos, "hilo", "checkbox", (it, i) => st.hilos.includes(i), it => sw(it.c) + it.n);
   };
 
-  this.renderCotizador = () => {
+  self.renderCotizador = () => {
     const q = model.getQ();
     const shapes = model.getShapes();
     const st = model.getState();
@@ -164,7 +185,8 @@ export default function View(model, cb) {
     const tela = q.telas[st.tela];
     const tam = q.tamanos[st.tam];
     const le = q.letras[st.letra];
-    const txt = $("#q-texto").value.trim();
+    const txtInput = $("#q-texto");
+    const txt = txtInput ? txtInput.value.trim() : "";
     const dark = ["Negro", "Vino", "Mezclilla", "Verde olivo"].includes(tela.n);
     let col = q.hilos[st.hilos[0] ?? 0]?.c || "#1d2b57";
     if (col.startsWith("conic")) col = "#c2334d";
@@ -185,39 +207,59 @@ export default function View(model, cb) {
       design = `<text x="${cx}" y="${cy}" text-anchor="middle" font-family="Quicksand, sans-serif" font-size="13" fill="${dark ? '#fdf0f5' : '#6b5f7a'}">Tu bordado aquí</text>`;
     }
     const r = Math.max(W, totalH) / 2 + 14;
-    $("#pv").innerHTML = `<rect width="400" height="440" fill="transparent"/>${sh.draw(tela.c)}
-      <circle class="hoop" cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"/>${design}`;
-    $("#pv-cap").innerHTML = `<b>${q.piezas.find(p => p.id === st.pieza).n}</b> · ${tela.n} · ${tam.n} (${tam.d})`;
-    this.progress();
+    const pv = $("#pv");
+    if (pv) {
+      pv.innerHTML = `<rect width="400" height="440" fill="transparent"/>${sh.draw(tela.c)}
+        <circle class="hoop" cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"/>${design}`;
+    }
+    const pvCap = $("#pv-cap");
+    if (pvCap) {
+      pvCap.innerHTML = `<b>${q.piezas.find(p => p.id === st.pieza).n}</b> · ${tela.n} · ${tam.n} (${tam.d})`;
+    }
+    self.progress();
   };
 
-  this.progress = () => {
+  self.progress = () => {
     const st = model.getState();
-    const txt = $("#q-texto").value.trim();
-    const done = [true, !!(st.foto || txt), st.hilos.length > 0, !!$("#q-nombre").value.trim()];
+    const txtInput = $("#q-texto");
+    const txt = txtInput ? txtInput.value.trim() : "";
+    const nameInput = $("#q-nombre");
+    const nameVal = nameInput ? nameInput.value.trim() : "";
+    const done = [true, !!(st.foto || txt), st.hilos.length > 0, !!nameVal];
     done.forEach((d, i) => { const el = $("#ok" + (i + 1)); if (el) el.textContent = d ? "✓ listo" : ""; });
     const prog = $("#qprog"); if (prog) prog.style.width = (done.filter(Boolean).length / 4 * 100) + "%";
   };
 
-  this.showErr = (m) => {
-    const e = $("#q-err"); e.textContent = m; e.hidden = !m;
+  self.showErr = (m) => {
+    const e = $("#q-err");
+    if (e) {
+      e.textContent = m;
+      e.hidden = !m;
+    }
   };
 
   /* wires del cotizador */
-  $("#qform").addEventListener("change", e => {
-    const t = e.target;
-    if (t.name === "pieza") cb.onPieza(t.value);
-    if (t.name === "tela") cb.onTela(+t.value);
-    if (t.name === "letra") cb.onLetra(+t.value);
-    if (t.name === "tam") cb.onTam(+t.value);
-    if (t.name === "pos") cb.onPos(t.value);
-    if (t.name === "hilo") cb.onHilos([...document.querySelectorAll('input[name=hilo]:checked')].map(x => +x.value));
+  const qform = $("#qform");
+  if (qform) {
+    qform.addEventListener("change", e => {
+      const t = e.target;
+      if (!cb) return;
+      if (t.name === "pieza" && cb.onPieza) cb.onPieza(t.value);
+      if (t.name === "tela" && cb.onTela) cb.onTela(+t.value);
+      if (t.name === "letra" && cb.onLetra) cb.onLetra(+t.value);
+      if (t.name === "tam" && cb.onTam) cb.onTam(+t.value);
+      if (t.name === "pos" && cb.onPos) cb.onPos(t.value);
+      if (t.name === "hilo" && cb.onHilos) cb.onHilos([...document.querySelectorAll('input[name=hilo]:checked')].map(x => +x.value));
+    });
+  }
+  ["q-texto", "q-nombre"].forEach(id => {
+    const el = $("#" + id);
+    if (el) el.addEventListener("input", () => self.renderCotizador());
   });
-  ["q-texto", "q-nombre"].forEach(id => $("#" + id).addEventListener("input", () => this.renderCotizador()));
 
   /* foto */
   function loadFile(file) {
-    if (!file || !file.type.startsWith("image/")) { this.showErr("El archivo debe ser una imagen (JPG o PNG)."); return; }
+    if (!file || !file.type.startsWith("image/")) { self.showErr("El archivo debe ser una imagen (JPG o PNG)."); return; }
     const fr = new FileReader();
     fr.onload = () => {
       const im = new Image();
@@ -225,44 +267,68 @@ export default function View(model, cb) {
         const m = 700, k = Math.min(1, m / Math.max(im.width, im.height));
         const c = document.createElement("canvas"); c.width = im.width * k; c.height = im.height * k;
         c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
-        cb.onFoto(c.toDataURL("image/jpeg", 0.85), file.name);
-        $("#drop-img").src = model.getState().foto; $("#drop-img").hidden = false;
-        $("#drop-t").textContent = "Foto lista"; $("#drop-s").textContent = file.name;
-        $("#q-foto-x").hidden = false;
-        this.renderCotizador();
+        if (cb && cb.onFoto) cb.onFoto(c.toDataURL("image/jpeg", 0.85), file.name);
+        const dropImg = $("#drop-img");
+        if (dropImg) {
+          dropImg.src = model.getState().foto;
+          dropImg.hidden = false;
+        }
+        const dropT = $("#drop-t"); if (dropT) dropT.textContent = "Foto lista";
+        const dropS = $("#drop-s"); if (dropS) dropS.textContent = file.name;
+        const qFotoX = $("#q-foto-x"); if (qFotoX) qFotoX.hidden = false;
+        self.renderCotizador();
       };
       im.src = fr.result;
     };
     fr.readAsDataURL(file);
   }
-  $("#q-foto").addEventListener("change", e => loadFile.call(this, e.target.files[0]));
+  const qFoto = $("#q-foto");
+  if (qFoto) qFoto.addEventListener("change", e => loadFile(e.target.files[0]));
   const drop = $("#drop");
-  ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
-  ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
-  drop.addEventListener("drop", e => loadFile.call(this, e.dataTransfer.files[0]));
-  $("#q-foto-x").onclick = () => {
-    cb.limpiarFoto();
-    $("#q-foto").value = "";
-    $("#drop-img").hidden = true;
-    $("#drop-t").textContent = "Sube la foto o dibujo del bordado";
-    $("#drop-s").textContent = "JPG o PNG. Toca aquí o arrastra la imagen.";
-    $("#q-foto-x").hidden = true;
-    this.renderCotizador();
-  };
+  if (drop) {
+    ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+    ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+    drop.addEventListener("drop", e => loadFile(e.dataTransfer.files[0]));
+  }
+  const qFotoX = $("#q-foto-x");
+  if (qFotoX) {
+    qFotoX.onclick = () => {
+      if (cb && cb.limpiarFoto) cb.limpiarFoto();
+      if (qFoto) qFoto.value = "";
+      const dropImg = $("#drop-img"); if (dropImg) dropImg.hidden = true;
+      const dropT = $("#drop-t"); if (dropT) dropT.textContent = "Sube la foto o dibujo del bordado";
+      const dropS = $("#drop-s"); if (dropS) dropS.textContent = "JPG o PNG. Toca aquí o arrastra la imagen.";
+      qFotoX.hidden = true;
+      self.renderCotizador();
+    };
+  }
 
   /* envío */
-  $("#qform").addEventListener("submit", e => {
-    e.preventDefault();
-    if (!$("#q-nombre").value.trim()) { this.showErr("Escribe tu nombre para que sepamos a quién responder."); $("#q-nombre").focus(); return; }
-    const st = model.getState();
-    if (!st.foto && !$("#q-texto").value.trim() && !$("#q-notas").value.trim()) {
-      this.showErr("Sube una foto de tu diseño, escribe un texto o descríbelo en las notas."); return;
-    }
-    this.showErr("");
-    cb.onEnviar(st);
-    $("#q-done-foto").hidden = !st.foto;
-    $("#q-done").hidden = false;
-  });
+  if (qform) {
+    qform.addEventListener("submit", e => {
+      e.preventDefault();
+      const nameInput = $("#q-nombre");
+      if (!nameInput || !nameInput.value.trim()) {
+        self.showErr("Escribe tu nombre para que sepamos a quién responder.");
+        if (nameInput) nameInput.focus();
+        return;
+      }
+      const st = model.getState();
+      const txtInput = $("#q-texto");
+      const notasInput = $("#q-notas");
+      const hasTxt = txtInput && txtInput.value.trim();
+      const hasNotas = notasInput && notasInput.value.trim();
+      if (!st.foto && !hasTxt && !hasNotas) {
+        self.showErr("Sube una foto de tu diseño, escribe un texto o descríbelo en las notas.");
+        return;
+      }
+      self.showErr("");
+      if (cb && cb.onEnviar) cb.onEnviar(st);
+      const qDoneFoto = $("#q-done-foto"); if (qDoneFoto) qDoneFoto.hidden = !st.foto;
+      const qDone = $("#q-done"); if (qDone) qDone.hidden = false;
+    });
+  }
+
   /* Establecer fecha mínima para entrega (hoy) para prevenir errores de entrada */
   const fechaEl = $("#q-fecha");
   if (fechaEl) {
@@ -270,21 +336,26 @@ export default function View(model, cb) {
     fechaEl.min = todayStr;
   }
 
-  $("#q-copy").onclick = async () => {
-    const btn = $("#q-copy");
-    try {
-      await navigator.clipboard.writeText(cb.mensaje());
-      const orig = btn.textContent;
-      btn.textContent = "✓ ¡Solicitud copiada al portapapeles!";
-      setTimeout(() => { btn.textContent = orig; }, 3500);
-    } catch {
-      $("#q-notas").focus();
-      btn.textContent = "No se pudo copiar automáticamente; copia tus datos manualmente";
-    }
-  };
+  const qCopy = $("#q-copy");
+  if (qCopy) {
+    qCopy.onclick = async () => {
+      try {
+        if (cb && cb.mensaje) await navigator.clipboard.writeText(cb.mensaje());
+        const orig = qCopy.textContent;
+        qCopy.textContent = "✓ ¡Solicitud copiada al portapapeles!";
+        setTimeout(() => { qCopy.textContent = orig; }, 3500);
+      } catch {
+        const qNotas = $("#q-notas"); if (qNotas) qNotas.focus();
+        qCopy.textContent = "No se pudo copiar automáticamente; copia tus datos manualmente";
+      }
+    };
+  }
+
   /* ---- Hash / navegación simple ---- */
-  this.scrollToSection = (id) => {
+  self.scrollToSection = (id) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({behavior: "smooth"});
   };
+
+  return self;
 }
