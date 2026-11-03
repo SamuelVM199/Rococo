@@ -1,9 +1,9 @@
-import config from "./config.js?v=4";
-import {PRODUCTOS, CATS, Q, SHAPES, CAT2PIEZA} from "./data/products.js?v=4";
-import Model from "./mvc/Model.js?v=4";
-import View from "./mvc/View.js?v=4";
-import Controller from "./mvc/Controller.js?v=4";
-import Router from "./router.js?v=4";
+import config from "./config.js";
+import {PRODUCTOS, CATS, Q, SHAPES, CAT2PIEZA} from "./data/products.js";
+import Model from "./mvc/Model.js";
+import View from "./mvc/View.js";
+import Controller from "./mvc/Controller.js";
+import Router from "./router.js";
 
 function initApp() {
   try {
