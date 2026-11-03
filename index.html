@@ -11,29 +11,39 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <a class="skip-link" href="#catalogo">Saltar al catálogo de piezas</a>
   <header class="band">
     <div class="wrap bar">
-      <a class="brand" href="#inicio">
+      <a class="brand" href="#inicio" aria-label="Rococó Handmade - Inicio">
         <img src="img/logo.jpg" alt="Logotipo Rococó Handmade">
         <span>Rococó Handmade</span>
         <small>Bordado a mano · Oaxaca</small>
       </a>
-      <nav>
-        <a href="#inicio">Inicio</a>
-        <a href="#catalogo">Catálogo</a>
-        <a href="#personaliza">Personalizar</a>
-        <a href="#pedidos">Pedidos</a>
-        <a href="#nosotros">Nosotros</a>
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="Abrir menú de navegación">
+        <span class="nav-toggle-icon" aria-hidden="true"></span>
+      </button>
+      <nav id="nav-menu" aria-label="Navegación principal">
+        <a class="nav-link" href="#inicio">Inicio</a>
+        <a class="nav-link" href="#catalogo">Catálogo</a>
+        <a class="nav-link" href="#personaliza">Personalizar</a>
+        <a class="nav-link" href="#pedidos">Pedidos</a>
+        <a class="nav-link" href="#talleres">Talleres</a>
+        <a class="nav-link" href="#nosotros">Nosotros</a>
+        <a class="nav-link" href="#preguntas">Preguntas</a>
       </nav>
-      <a class="btn btn-ghost js-contact" href="#" data-msg="Hola, Rococó. Quiero información sobre sus piezas." target="_blank" rel="noopener"><span class="js-contact-label">WhatsApp</span></a>
+      <a class="btn btn-ghost header-cta js-contact" href="#" data-msg="Hola, Rococó. Quiero información sobre sus piezas." target="_blank" rel="noopener"><span class="js-contact-label">WhatsApp</span></a>
     </div>
   </header>
 
   <main id="inicio">
     <div class="hero">
-      <img id="foto" src="img/Nat_inicial.jpeg" alt="Rococó Handmade">
+      <img id="foto" src="img/Nat_inicial.jpeg" alt="Rococó Handmade · Piezas bordadas a mano">
+      <a class="hero-scroll-cue" href="#presentacion" aria-label="Deslizar para ver la colección">
+        <span>Desliza para explorar</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor"><path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+      </a>
     </div>    
-    <section class="hero band" style="padding-block:0">
+    <section id="presentacion" class="hero band" style="padding-block:0">
       <div class="wrap">
         <div>
           <p class="eyebrow">Huajuapan de León, Oaxaca · Desde 2020</p>
@@ -71,7 +81,10 @@
       <div class="wrap">
         <div class="head">
           <div><p class="eyebrow">Catálogo</p><h2>Piezas disponibles</h2></div>
-          <p>Toca una foto para verla en grande. Para pedir, escríbenos por WhatsApp desde el botón de cada pieza.</p>
+          <div class="head-info">
+            <p>Toca una foto para verla en grande. Para pedir, escríbenos por WhatsApp desde el botón de cada pieza.</p>
+            <p class="catalog-status" id="catalog-count" aria-live="polite">Cargando piezas...</p>
+          </div>
         </div>
         <div class="filters" role="group" aria-label="Filtrar por tipo" id="filters"></div>
         <div class="grid" id="grid"></div>
@@ -148,15 +161,31 @@
 
             <fieldset>
               <legend><span class="num">4</span>Tus datos <span class="ok" id="ok4"></span></legend>
+              <p class="req-note"><span class="req-star" aria-hidden="true">*</span> Campos obligatorios para preparar tu cotización</p>
               <div class="row2">
-                <div class="fld"><label class="lbl" for="q-nombre">Nombre *</label><input type="text" id="q-nombre" autocomplete="name"></div>
-                <div class="fld"><label class="lbl" for="q-ciudad">Ciudad de entrega</label><input type="text" id="q-ciudad" placeholder="Ej. Huajuapan, Puebla" autocomplete="address-level2"></div>
+                <div class="fld">
+                  <label class="lbl" for="q-nombre">Nombre completo <span class="req-star" aria-hidden="true">*</span></label>
+                  <input type="text" id="q-nombre" autocomplete="name" required aria-required="true" placeholder="Tu nombre">
+                </div>
+                <div class="fld">
+                  <label class="lbl" for="q-ciudad">Ciudad de entrega</label>
+                  <input type="text" id="q-ciudad" placeholder="Ej. Huajuapan, Puebla, CDMX" autocomplete="address-level2">
+                </div>
               </div>
               <div class="row2">
-                <div class="fld"><label class="lbl" for="q-cant">Cantidad</label><input type="number" id="q-cant" min="1" max="200" value="1"></div>
-                <div class="fld"><label class="lbl" for="q-fecha">¿Para cuándo la necesitas?</label><input type="date" id="q-fecha"></div>
+                <div class="fld">
+                  <label class="lbl" for="q-cant">Cantidad de piezas</label>
+                  <input type="number" id="q-cant" min="1" max="200" value="1">
+                </div>
+                <div class="fld">
+                  <label class="lbl" for="q-fecha">¿Para cuándo la necesitas?</label>
+                  <input type="date" id="q-fecha">
+                </div>
               </div>
-              <div class="fld"><label class="lbl" for="q-notas">Notas para la bordadora</label><textarea id="q-notas" placeholder="Es un regalo, quiero flores alrededor del nombre, etc."></textarea></div>
+              <div class="fld">
+                <label class="lbl" for="q-notas">Notas para la bordadora (opcional)</label>
+                <textarea id="q-notas" placeholder="Ej. Es un regalo de cumpleaños, me gustaría flores alrededor del nombre, combinación de colores especial..."></textarea>
+              </div>
             </fieldset>
 
             <div class="sendbox">
@@ -296,28 +325,45 @@
       <p class="fine">© 2026 Rococó Handmade. Todas las piezas y diseños son originales y hechos a mano.</p>
     </div>
   </footer>
+  <!-- Acciones flotantes para fácil alcance (Ley de Fitts) -->
+  <div class="floating-actions" aria-label="Acciones rápidas">
+    <button class="scroll-top" id="scroll-top" type="button" aria-label="Volver arriba de la página" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="22" height="22"><path d="m18 15-6-6-6 6"/></svg>
+    </button>
+    <a class="fab-wa js-contact" href="#" data-msg="Hola, Rococó. Quiero información sobre sus piezas." target="_blank" rel="noopener" aria-label="Contactar por WhatsApp">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="24" height="24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm.01 18.06c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.16 8.16 0 0 1-1.25-4.29c0-4.52 3.68-8.2 8.2-8.2 2.19 0 4.25.85 5.8 2.4 1.55 1.55 2.41 3.61 2.4 5.8-.01 4.52-3.69 8.15-8.16 8.15zm4.49-6.13c-.25-.12-1.46-.72-1.68-.8-.23-.08-.39-.12-.56.12-.17.25-.65.8-.8 1-.14.12-.29.14-.54.02-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.39-1.72-.14-.25-.02-.38.11-.5.11-.11.25-.29.37-.43.12-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.49-.4-.42-.56-.43h-.47c-.17 0-.43.06-.66.31-.22.25-.86.84-.86 2.05 0 1.21.88 2.38 1 2.55.12.17 1.74 2.66 4.22 3.73.59.25 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.17.21-.58.21-1.07.15-1.17-.06-.1-.22-.16-.47-.28z"/></svg>
+      <span class="fab-wa-text">WhatsApp</span>
+    </a>
+  </div>
 
-  <dialog id="viewer" aria-labelledby="dv-title">
-    <button class="close" id="dv-close" aria-label="Cerrar">×</button>
+  <dialog id="viewer" aria-labelledby="dv-title" aria-modal="true">
+    <button class="close" id="dv-close" aria-label="Cerrar ventana de detalles">×</button>
     <div class="dv">
       <div class="gal">
-        <img id="dv-img" src="" alt="">
-        <div class="thumbs" id="dv-thumbs"></div>
+        <div class="gal-stage">
+          <button class="gal-nav gal-prev" id="dv-prev" type="button" aria-label="Foto anterior" hidden>
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <img id="dv-img" src="" alt="">
+          <button class="gal-nav gal-next" id="dv-next" type="button" aria-label="Foto siguiente" hidden>
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <span class="gal-counter" id="dv-counter" aria-live="polite"></span>
+        </div>
+        <div class="thumbs" id="dv-thumbs" role="tablist" aria-label="Miniaturas de la pieza"></div>
       </div>
       <div class="txt">
-        <p class="cat eyebrow" id="dv-cat"></p>
+        <span class="cat-badge" id="dv-cat"></span>
         <h3 id="dv-title"></h3>
         <p id="dv-desc" style="color:var(--muted)"></p>
         <dl id="dv-dl"></dl>
-        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:auto">
+        <div class="dv-actions">
           <a class="btn btn-solid" id="dv-btn" href="#" target="_blank" rel="noopener">Pedir esta pieza</a>
           <button class="btn btn-ghost" type="button" id="dv-custom">Personalizar una así</button>
         </div>
       </div>
     </div>
   </dialog>
-
-  <span id="PING_CONTENT_PUSH_NOTIFICATION" style="display: none;"></span>
 
   <script type="module" src="js/main.js"></script>
 </body>

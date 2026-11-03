@@ -29,20 +29,26 @@ export default function View(model, cb) {
   this.renderGrid = () => {
     const list = model.getProductos();
     const grid = $("#grid");
+    const countEl = $("#catalog-count");
+    if (countEl) {
+      const f = model.getFiltro();
+      const catName = f === "todo" ? "todas las categorías" : (model.getCats()[f] || f);
+      countEl.textContent = `Mostrando ${list.length} ${list.length === 1 ? 'pieza' : 'piezas'} (${catName})`;
+    }
     grid.innerHTML = list.map(p => `
       <article class="card">
-        <button class="ph" type="button" data-i="${p.i}" aria-label="Ver fotos de ${p.nombre}">
+        <button class="ph" type="button" data-i="${p.i}" aria-label="Ver detalles y fotos de ${p.nombre}">
           <img src="${cb.config.imgBase}/${p.fotos[0]}" alt="${esc(p.desc)}" loading="lazy">
           ${p.personalizable ? '<span class="badge">Personalizable</span>' : ''}
           ${p.fotos.length > 1 ? `<span class="count">${p.fotos.length} fotos</span>` : ''}
         </button>
         <div class="body">
-          <span class="cat">${model.getCats()[p.cat]}</span>
+          <span class="cat-badge">${model.getCats()[p.cat]}</span>
           <h3>${esc(p.nombre)}</h3>
           <p class="desc">${esc(p.desc)}</p>
           <div class="meta">
             ${p.precio ? `<span class="price">${fmt(p.precio)}</span>` : '<span class="price ask">Consulta precio</span>'}
-            <a class="btn btn-solid" href="${contactURL(pedirMsg(p))}" target="_blank" rel="noopener">Pedir</a>
+            <a class="btn btn-solid" href="${contactURL(pedirMsg(p))}" target="_blank" rel="noopener" aria-label="Pedir ${esc(p.nombre)} por WhatsApp">Pedir</a>
           </div>
         </div>
       </article>`).join("") + `
@@ -59,7 +65,12 @@ export default function View(model, cb) {
 
   /* ---- Visor ---- */
   const dlg = $("#viewer");
+  let curProduct = null;
+  let curPhotoIdx = 0;
+
   this.renderViewer = (p) => {
+    curProduct = p;
+    curPhotoIdx = 0;
     $("#dv-cat").textContent = model.getCats()[p.cat];
     $("#dv-title").textContent = p.nombre;
     $("#dv-desc").textContent = p.desc;
@@ -73,22 +84,61 @@ export default function View(model, cb) {
     $("#dv-btn").textContent = "Pedir por " + (cb.config.whatsapp ? "WhatsApp" : "mensaje directo");
     const thumbs = $("#dv-thumbs");
     thumbs.innerHTML = p.fotos.length > 1 ? p.fotos.map((f, k) =>
-      `<button type="button" aria-label="Foto ${k + 1}"><img src="${cb.config.imgBase}/${f}" alt=""></button>`).join("") : "";
+      `<button type="button" aria-label="Ver foto ${k + 1} de ${p.fotos.length}" aria-current="${k === 0}"><img src="${cb.config.imgBase}/${f}" alt=""></button>`).join("") : "";
     $$("#dv-thumbs button", (b, k) => {
-      b.onclick = () => cb.onPhoto(p, k);
+      b.onclick = () => { cb.onPhoto(p, k); };
     });
     this.showPhoto(p, 0);
     if (typeof dlg.showModal === "function") dlg.showModal();
   };
+
   this.showPhoto = (p, k) => {
+    curProduct = p;
+    curPhotoIdx = k;
     $("#dv-img").src = cb.config.imgBase + "/" + p.fotos[k];
-    $("#dv-img").alt = p.desc;
+    $("#dv-img").alt = `${p.nombre} · Foto ${k + 1} de ${p.fotos.length}`;
+    const prev = $("#dv-prev");
+    const next = $("#dv-next");
+    const count = $("#dv-counter");
+    const hasMany = p.fotos.length > 1;
+    if (prev) prev.hidden = !hasMany;
+    if (next) next.hidden = !hasMany;
+    if (count) {
+      count.hidden = !hasMany;
+      count.textContent = `${k + 1} / ${p.fotos.length}`;
+    }
     $$("#dv-thumbs button", (b, j) => b.setAttribute("aria-current", j === k));
   };
 
+  const prevBtn = $("#dv-prev");
+  const nextBtn = $("#dv-next");
+  if (prevBtn) {
+    prevBtn.onclick = () => {
+      if (!curProduct || curProduct.fotos.length <= 1) return;
+      const nextIdx = (curPhotoIdx - 1 + curProduct.fotos.length) % curProduct.fotos.length;
+      this.showPhoto(curProduct, nextIdx);
+    };
+  }
+  if (nextBtn) {
+    nextBtn.onclick = () => {
+      if (!curProduct || curProduct.fotos.length <= 1) return;
+      const nextIdx = (curPhotoIdx + 1) % curProduct.fotos.length;
+      this.showPhoto(curProduct, nextIdx);
+    };
+  }
+  document.addEventListener("keydown", e => {
+    if (!dlg.open || !curProduct || curProduct.fotos.length <= 1) return;
+    if (e.key === "ArrowLeft") {
+      const nextIdx = (curPhotoIdx - 1 + curProduct.fotos.length) % curProduct.fotos.length;
+      this.showPhoto(curProduct, nextIdx);
+    } else if (e.key === "ArrowRight") {
+      const nextIdx = (curPhotoIdx + 1) % curProduct.fotos.length;
+      this.showPhoto(curProduct, nextIdx);
+    }
+  });
+
   $("#dv-close").onclick = () => dlg.close();
   dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
-
   /* ---- Cotizador ---- */
   this.buildOpts = () => {
     const q = model.getQ();
@@ -213,15 +263,25 @@ export default function View(model, cb) {
     $("#q-done-foto").hidden = !st.foto;
     $("#q-done").hidden = false;
   });
+  /* Establecer fecha mínima para entrega (hoy) para prevenir errores de entrada */
+  const fechaEl = $("#q-fecha");
+  if (fechaEl) {
+    const todayStr = new Date().toISOString().split("T")[0];
+    fechaEl.min = todayStr;
+  }
+
   $("#q-copy").onclick = async () => {
+    const btn = $("#q-copy");
     try {
       await navigator.clipboard.writeText(cb.mensaje());
-      $("#q-copy").textContent = "solicitud copiada";
+      const orig = btn.textContent;
+      btn.textContent = "✓ ¡Solicitud copiada al portapapeles!";
+      setTimeout(() => { btn.textContent = orig; }, 3500);
     } catch {
-      $("#q-notas").focus(); $("#q-copy").textContent = "no se pudo copiar; envíanos los datos a mano";
+      $("#q-notas").focus();
+      btn.textContent = "No se pudo copiar automáticamente; copia tus datos manualmente";
     }
   };
-
   /* ---- Hash / navegación simple ---- */
   this.scrollToSection = (id) => {
     const el = document.getElementById(id);

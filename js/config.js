@@ -7,3 +7,12 @@ export const INSTAGRAM = "rococohandmade";
 export const FACEBOOK = "https://www.facebook.com/share/1Cdmksoc2e/";
 export const CANVA = "https://hdxvzxv.my.canva.site/rococohandmade";
 export const IMG_BASE = "img";
+
+const config = {
+  whatsapp: WHATSAPP,
+  instagram: INSTAGRAM,
+  facebook: FACEBOOK,
+  canva: CANVA,
+  imgBase: IMG_BASE,
+};
+export default config;

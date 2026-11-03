@@ -17,7 +17,9 @@ export default function Router() {
       // enlaces internos con hash
       document.querySelectorAll('a[href^="#"]').forEach(a => {
         a.addEventListener("click", e => {
-          const id = a.getAttribute("href").slice(1);
+          const href = a.getAttribute("href");
+          if (!href || href === "#") return;
+          const id = href.slice(1);
           if (document.getElementById(id)) {
             e.preventDefault();
             history.pushState(null, "", "#" + id);
