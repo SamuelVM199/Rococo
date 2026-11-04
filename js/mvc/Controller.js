@@ -27,32 +27,102 @@ export default function Controller(model, view, config) {
     onFoto: (dataUrl, nombre) => { model.setFoto(dataUrl, nombre); },
     limpiarFoto: () => { model.limpiarFoto(); },
     onEnviar: st => {
-      const a = document.createElement("a");
-      a.href = "https://wa.me/" + config.whatsapp + "?text=" + encodeURIComponent(mensaje());
-      a.target = "_blank"; a.rel = "noopener"; document.body.appendChild(a); a.click(); a.remove();
+      const msg = cb.mensaje();
+      const url = "https://wa.me/" + config.whatsapp + "?text=" + encodeURIComponent(msg);
+      const qWaLink = document.getElementById("q-wa-link");
+      if (qWaLink) qWaLink.href = url;
+
+      try {
+        const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) {
+          window.location.href = url;
+        } else {
+          const win = window.open(url, "_blank", "noopener,noreferrer");
+          if (!win || win.closed || typeof win.closed === "undefined") {
+            const a = document.createElement("a");
+            a.href = url;
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+          }
+        }
+      } catch {
+        window.location.href = url;
+      }
     },
     mensaje: () => {
       const q = model.getQ();
       const st = model.getState();
-      const v = id => document.getElementById(id).value.trim();
-      const tam = q.tamanos[st.tam];
+      const v = id => {
+        const el = document.getElementById(id);
+        return el ? el.value.trim() : "";
+      };
+      const piezaObj = q.piezas.find(p => p.id === st.pieza);
+      const piezaNombre = piezaObj ? piezaObj.n : st.pieza;
+      const telaNombre = q.telas[st.tela] ? q.telas[st.tela].n : "Manta natural";
+      const tam = q.tamanos[st.tam] || q.tamanos[1];
+      const posObj = q.posiciones.find(p => p.id === st.pos);
+      const posNombre = posObj ? posObj.n : st.pos;
+      const hilosTexto = st.hilos && st.hilos.length
+        ? st.hilos.map(i => q.hilos[i]?.n).filter(Boolean).join(", ")
+        : "A elección de Rococó";
+      const letraNombre = q.letras[st.letra] ? q.letras[st.letra].n : "Manuscrita";
+      const textoBordado = v("q-texto");
+      const cant = v("q-cant") || "1";
+      const nombre = v("q-nombre");
+      const ciudad = v("q-ciudad");
+      const notas = v("q-notas");
+      const fechaVal = v("q-fecha");
+
+      let fechaStr = "Lo antes posible / Flexible";
+      if (fechaVal) {
+        try {
+          const d = new Date(fechaVal + "T12:00:00");
+          if (!isNaN(d.getTime())) {
+            fechaStr = d.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+          } else {
+            fechaStr = fechaVal;
+          }
+        } catch {
+          fechaStr = fechaVal;
+        }
+      }
+
+      const disenoTexto = st.foto
+        ? (st.fotoNombre ? `${st.fotoNombre} (adjunto la imagen a continuación)` : "Foto cargada (adjunto la imagen a continuación)")
+        : "Sin foto adjunta (ver texto y notas)";
+
       const lines = [
-        "Hola, Rococó. Quiero cotizar una pieza personalizada:",
+        "✨ *Solicitud de Cotización Personalizada - Rococó Handmade* ✨",
         "",
-        "• Pieza: " + q.piezas.find(p => p.id === st.pieza).n,
-        "• Tela: " + q.telas[st.tela].n,
+        "Hola, Rococó. Quiero cotizar una pieza personalizada con los siguientes datos:",
+        "",
+        "📋 *Detalles de la pieza:*",
+        "• Pieza: " + piezaNombre,
+        "• Color de tela: " + telaNombre,
         "• Tamaño del bordado: " + tam.n + " (" + tam.d + ")",
-        "• Ubicación: " + q.posiciones.find(p => p.id === st.pos).n,
-        "• Colores de hilo: " + (st.hilos.length ? st.hilos.map(i => q.hilos[i].n).join(", ") : "a elección de Rococó"),
+        "• Ubicación: " + posNombre,
+        "• Colores de hilo: " + hilosTexto,
+        "",
+        "🎨 *Diseño y bordado:*",
+        "• Foto / Diseño: " + disenoTexto,
+        "• Texto bordado: " + (textoBordado ? `«${textoBordado}»` : "Sin texto bordado"),
+        "• Tipo de letra: " + letraNombre,
+        "",
+        "👤 *Datos del pedido y entrega:*",
+        "• Nombre completo: " + (nombre || "No especificado"),
+        "• Ciudad de entrega: " + (ciudad || "No especificada (a acordar)"),
+        "• Cantidad de piezas: " + cant,
+        "• Fecha deseada: " + fechaStr,
+        "• Notas para la bordadora: " + (notas || "Ninguna"),
       ];
-      if (v("q-texto")) lines.push("• Texto: «" + v("q-texto") + "» con letra " + q.letras[st.letra].n);
-      lines.push("• Diseño: " + (st.foto ? "te envío la foto en este chat" : "sin foto, ver notas"));
-      lines.push("• Cantidad: " + (v("q-cant") || "1"));
-      if (v("q-fecha")) lines.push("• Fecha deseada: " + new Date(v("q-fecha") + "T12:00").toLocaleDateString("es-MX", {day: "numeric", month: "long", year: "numeric"}));
-      lines.push("", "Nombre: " + v("q-nombre"));
-      if (v("q-ciudad")) lines.push("Entrega en: " + v("q-ciudad"));
-      if (v("q-notas")) lines.push("Notas: " + v("q-notas"));
-      if (st.foto) lines.push("", "(Adjunto la foto de mi diseño en el siguiente mensaje)");
+
+      if (st.foto) {
+        lines.push("", "📎 _(Adjunto la foto de mi diseño a continuación en este chat)_");
+      }
+
       return lines.join("\n");
     },
   };
