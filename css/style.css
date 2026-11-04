@@ -355,3 +355,27 @@ ol{margin:0;padding-left:1.2em;color:var(--ink)}
   border-color: var(--navy);
   transform: scale(1.05);
 }
+/* Sección Talleres de bordado (Composición editorial 2 columnas + microtarjetas) */
+.taller{padding-block:32px 48px}
+.taller-card{display:grid;grid-template-columns:1fr 1.2fr;gap:40px;align-items:center;background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);padding:36px;box-shadow:0 16px 40px rgba(48,48,92,0.06)}
+.taller-media{position:relative;width:100%;height:100%;min-height:420px;border-radius:calc(var(--r) - 4px);overflow:hidden;background:var(--lino);box-shadow:0 10px 24px rgba(0,0,0,0.08)}
+.taller-media img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+.taller-badge{position:absolute;top:14px;left:14px;background:rgba(48,48,92,0.9);backdrop-filter:blur(6px);color:var(--on-navy);font-size:.8rem;font-weight:700;padding:6px 14px;border-radius:999px;letter-spacing:.02em;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+.taller-content{display:flex;flex-direction:column;gap:16px}
+.taller-title{font-size:clamp(1.9rem,3.8vw,2.7rem);line-height:1.15}
+.taller-lead{font-size:1.02rem;color:var(--muted);line-height:1.6}
+.taller-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-block:6px}
+.taller-item{display:flex;align-items:flex-start;gap:12px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px}
+.taller-icon{font-size:1.35rem;line-height:1;flex-shrink:0;margin-top:2px}
+.taller-item strong{display:block;font-size:.92rem;color:var(--navy);margin-bottom:3px}
+.taller-item p{font-size:.84rem;color:var(--muted);line-height:1.45;margin:0}
+.taller-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:8px}
+@media (max-width:900px){
+  .taller-card{grid-template-columns:1fr;padding:24px;gap:28px}
+  .taller-media{min-height:300px;max-height:380px}
+}
+@media (max-width:600px){
+  .taller-grid{grid-template-columns:1fr}
+  .taller-actions{flex-direction:column;align-items:stretch}
+  .taller-actions .btn{width:100%}
+}
