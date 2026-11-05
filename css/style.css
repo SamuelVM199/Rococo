@@ -270,26 +270,26 @@ section, [id]{scroll-margin-top:calc(var(--hh, 70px) + 16px);padding-block:10px}
 .preview{flex:1 1 340px;max-width:460px}
 .cap{margin-top:12px;display:flex;flex-direction:column;gap:6px}
 .cap span{font-size:.9rem;color:var(--muted)}
-/* Tarjeta destacada: Enviar diseño por WhatsApp con ejemplos */
-.diseno-notice-card{background:linear-gradient(135deg,var(--pink) 0%,var(--pink-deep) 100%);border:2px solid var(--navy);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 24px rgba(48,48,92,0.08);position:relative}
-.diseno-notice-header{display:flex;align-items:center;gap:14px}
-.diseno-notice-icon{width:46px;height:46px;border-radius:50%;background:#25D366;color:#ffffff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(37,211,102,0.35)}
-.diseno-notice-icon svg{width:24px;height:24px}
-.diseno-notice-tag{display:inline-block;font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--navy);background:var(--card);padding:2px 8px;border-radius:999px;margin-bottom:3px;border:1px solid var(--line)}
-.diseno-notice-title{margin:0;font-family:var(--f-display);font-size:1.12rem;color:var(--navy);line-height:1.25;font-weight:700}
-.diseno-notice-text{margin:0;font-size:.92rem;color:var(--ink);line-height:1.5}
+/* Tarjeta destacada: Enviar diseño por WhatsApp con ejemplos (compacta y autocontenida) */
+.diseno-notice-card{background:linear-gradient(135deg,var(--pink) 0%,var(--pink-deep) 100%);border:2px solid var(--navy);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 14px rgba(48,48,92,0.06);position:relative;margin-bottom:6px}
+.diseno-notice-header{display:flex;align-items:center;gap:12px}
+.diseno-notice-icon{width:40px;height:40px;border-radius:50%;background:#25D366;color:#ffffff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 8px rgba(37,211,102,0.3)}
+.diseno-notice-icon svg{width:22px;height:22px}
+.diseno-notice-tag{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--navy);background:var(--card);padding:2px 8px;border-radius:999px;margin-bottom:2px;border:1px solid var(--line)}
+.diseno-notice-title{margin:0;font-family:var(--f-display);font-size:1.05rem;color:var(--navy);line-height:1.2;font-weight:700}
+.diseno-notice-text{margin:0;font-size:.88rem;color:var(--ink);line-height:1.45}
 .diseno-notice-text strong{color:var(--navy)}
 
-/* Ejemplos visuales */
-.diseno-ejemplo{backdrop-filter:blur(4px);border:1.5px dashed var(--navy-soft);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
-.diseno-ejemplo-label{font-size:.82rem;font-weight:700;color:var(--navy)}
-.diseno-ejemplo-items{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.ejemplo-item{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
-.ejemplo-item img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;border:1.5px solid var(--line);box-shadow:0 2px 6px rgba(0,0,0,0.06);background:var(--lino)}
-.ejemplo-item figcaption{font-size:.76rem;font-weight:700;color:var(--navy);line-height:1.2}
+/* Ejemplos visuales compactos */
+.diseno-ejemplo{background:rgba(255,255,255,0.7);backdrop-filter:blur(4px);border:1.5px dashed var(--navy-soft);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.diseno-ejemplo-label{font-size:.78rem;font-weight:700;color:var(--navy)}
+.diseno-ejemplo-items{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ejemplo-item{margin:0;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.ejemplo-item img{width:100%;aspect-ratio:1/1;max-height:85px;object-fit:cover;border-radius:6px;border:1px solid var(--line);box-shadow:0 1px 4px rgba(0,0,0,0.05);background:var(--lino)}
+.ejemplo-item figcaption{font-size:.72rem;font-weight:700;color:var(--navy);line-height:1.15}
 
-.diseno-paso-tip{display:flex;align-items:center;gap:10px;background:var(--paper);border-radius:8px;padding:10px 14px;font-size:.85rem;color:var(--ink);border-left:4px solid var(--navy);width:100%;box-sizing:border-box;box-shadow:0 1px 4px rgba(0,0,0,0.04);grid-column:1 / -1}
-.tip-badge{font-size:.72rem;font-weight:800;color:var(--navy);background:var(--pink-palo);padding:3px 8px;border-radius:4px;flex-shrink:0;letter-spacing:.04em}
+.diseno-paso-tip{display:flex;align-items:center;gap:8px;background:var(--paper);border-radius:6px;padding:8px 12px;font-size:.82rem;color:var(--ink);border-left:3.5px solid var(--navy);width:100%;box-sizing:border-box}
+.tip-badge{font-size:.68rem;font-weight:800;color:var(--navy);background:var(--pink-palo);padding:2px 6px;border-radius:4px;flex-shrink:0}
 .form{flex:1 1 340px;max-width:560px;display:flex;flex-direction:column;gap:20px}
 .progress{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
 .progress i{height:100%;background:var(--thread);width:0%;transition:width .3s}
