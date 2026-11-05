@@ -261,9 +261,17 @@ var SHAPES = {
   }
 };
 var CAT2PIEZA = { tote: "tote", jareta: "jareta", cosmetiquera: "cosmetiquera", ropa: "sudadera" };
+var IDEAS_BORDADO = [
+  { id: "perrito", n: "Mascota", img: "img/sudadera-perrito.jpg", desc: "Bordado de tu mascota favorita" },
+  { id: "ojo", n: "Ojo místico", img: "img/tote-ojo.jpg", desc: "Ojo protector con rayos dorados" },
+  { id: "cereza", n: "Cerezas", img: "img/jareta-cereza.jpg", desc: "Frutas y elementos botánicos" },
+  { id: "corazoncitos", n: "Corazoncitos", img: "img/tote-corazoncitos-1.jpg", desc: "Pequeños corazones bordados a mano" },
+  { id: "flores", n: "Flores", img: "img/jareta-vichy-rosa-1.jpg", desc: "Flores artesanales en relieve" },
+  { id: "jirafas", n: "Animales", img: "img/cosmetiquera-jirafas.jpg", desc: "Diseño tierno con árboles y sol" }
+];
 
 // rococo-handmade/js/mvc/Model.js
-function Model({ productos, cats, q, shapes, cat2pieza }) {
+function Model({ productos, cats, q, shapes, cat2pieza, ideas }) {
   let filtro = "todo";
   let abierto = null;
   let ultimaCat = "tote";
@@ -274,8 +282,12 @@ function Model({ productos, cats, q, shapes, cat2pieza }) {
     tam: 1,
     pos: "centro",
     hilos: [0],
+    fotos: [],
+    fotoActiva: 0,
     foto: null,
-    fotoNombre: ""
+    fotoNombre: "",
+    ideaSugerida: null,
+    rawFiles: []
   };
   return {
     getFiltro() {
@@ -310,7 +322,7 @@ function Model({ productos, cats, q, shapes, cat2pieza }) {
       ultimaCat = c;
     },
     getState() {
-      return { ...st };
+      return { ...st, fotos: [...st.fotos] };
     },
     setState(patch) {
       Object.assign(st, patch);
@@ -333,13 +345,73 @@ function Model({ productos, cats, q, shapes, cat2pieza }) {
     setHilos(idxs) {
       st.hilos = idxs;
     },
-    setFoto(dataUrl, nombre) {
-      st.foto = dataUrl;
-      st.fotoNombre = nombre;
+    addFoto(url, name, isIdea = false, rawFile = null) {
+      const id = Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+      st.fotos.push({ id, url, name, isIdea });
+      if (rawFile)
+        st.rawFiles.push(rawFile);
+      st.fotoActiva = st.fotos.length - 1;
+      st.foto = url;
+      st.fotoNombre = name;
+      if (!isIdea)
+        st.ideaSugerida = null;
     },
-    limpiarFoto() {
+    removeFoto(index) {
+      if (index >= 0 && index < st.fotos.length) {
+        st.fotos.splice(index, 1);
+        if (index < st.rawFiles.length) {
+          st.rawFiles.splice(index, 1);
+        }
+        if (st.fotoActiva >= st.fotos.length) {
+          st.fotoActiva = Math.max(0, st.fotos.length - 1);
+        }
+        const active = st.fotos[st.fotoActiva];
+        st.foto = active ? active.url : null;
+        st.fotoNombre = active ? active.name : "";
+      }
+    },
+    setFotoActiva(index) {
+      if (index >= 0 && index < st.fotos.length) {
+        st.fotoActiva = index;
+        st.foto = st.fotos[index].url;
+        st.fotoNombre = st.fotos[index].name;
+      }
+    },
+    setFotoServerUrl(index, serverUrl) {
+      if (index >= 0 && index < st.fotos.length) {
+        st.fotos[index].serverUrl = serverUrl;
+      }
+    },
+    limpiarFotos() {
+      st.fotos = [];
+      st.rawFiles = [];
+      st.fotoActiva = 0;
       st.foto = null;
       st.fotoNombre = "";
+      st.ideaSugerida = null;
+    },
+    setFoto(dataUrl, nombre) {
+      st.fotos = [{ id: "f0", url: dataUrl, name: nombre, isIdea: false }];
+      st.fotoActiva = 0;
+      st.foto = dataUrl;
+      st.fotoNombre = nombre;
+      st.ideaSugerida = null;
+    },
+    limpiarFoto() {
+      this.limpiarFotos();
+    },
+    setIdeaSugerida(idea) {
+      if (!idea) {
+        st.ideaSugerida = null;
+        return;
+      }
+      st.ideaSugerida = idea.n;
+      const foundIdx = st.fotos.findIndex((f) => f.isIdea && f.name === idea.n);
+      if (foundIdx >= 0) {
+        this.setFotoActiva(foundIdx);
+      } else {
+        this.addFoto(idea.img, idea.n, true);
+      }
     },
     getQ() {
       return q;
@@ -349,6 +421,12 @@ function Model({ productos, cats, q, shapes, cat2pieza }) {
     },
     getCat2Pieza() {
       return cat2pieza;
+    },
+    getIdeas() {
+      return ideas || [];
+    },
+    getRawFiles() {
+      return [...st.rawFiles];
     }
   };
 }
@@ -548,6 +626,112 @@ function View(model, initialCb) {
     chips($("#o-pos"), q.posiciones, "pos", "radio", (it) => it.id === st.pos, (it) => it.n);
     chips($("#o-hilo"), q.hilos, "hilo", "checkbox", (it, i) => st.hilos.includes(i), (it) => sw(it.c) + it.n);
   };
+  self.buildIdeas = () => {
+    const ideas = model.getIdeas ? model.getIdeas() : [];
+    const box = $("#pv-ideas-chips");
+    if (!box)
+      return;
+    const st = model.getState();
+    box.innerHTML = ideas.map((idea) => {
+      const isAct = st.ideaSugerida === idea.n;
+      return `<button type="button" class="pv-idea-chip ${isAct ? "active" : ""}" data-id="${esc(idea.id)}" title="${esc(idea.desc)}">
+        <img src="${esc(idea.img)}" alt="">
+        <span>${esc(idea.n)}</span>
+      </button>`;
+    }).join("");
+    $$(".pv-idea-chip", (btn) => {
+      btn.onclick = () => {
+        const id = btn.dataset.id;
+        const idea = ideas.find((it) => it.id === id);
+        if (idea && cb && cb.onIdea)
+          cb.onIdea(idea);
+      };
+    });
+  };
+  self.renderFotos = () => {
+    const isMobile = typeof navigator !== "undefined" && (/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent));
+    const desktopNotice = $("#notice-desktop-foto");
+    const mobileWrap = $("#wrap-mobile-foto");
+    if (desktopNotice && mobileWrap) {
+      desktopNotice.hidden = isMobile;
+      mobileWrap.hidden = !isMobile;
+    }
+    const st = model.getState();
+    const list = $("#q-fotos-list");
+    const addBtn = $("#q-fotos-add");
+    const pvStrip = $("#pv-fotos-strip");
+    const pvThumbs = $("#pv-fotos-thumbs");
+    if (list) {
+      if (!st.fotos || st.fotos.length === 0) {
+        list.hidden = true;
+        list.innerHTML = "";
+        if (addBtn)
+          addBtn.hidden = true;
+        const dropT = $("#drop-t");
+        if (dropT)
+          dropT.textContent = "Sube tus fotos o dibujos del bordado";
+        const dropS = $("#drop-s");
+        if (dropS)
+          dropS.textContent = "Puedes seleccionar varias fotos (JPG o PNG). Toca aquí o arrástralas.";
+      } else {
+        list.hidden = false;
+        if (addBtn)
+          addBtn.hidden = false;
+        const dropT = $("#drop-t");
+        if (dropT)
+          dropT.textContent = `${st.fotos.length} fotografía(s) de diseño`;
+        const dropS = $("#drop-s");
+        if (dropS)
+          dropS.textContent = "Toca para agregar más fotos o arrástralas aquí.";
+        list.innerHTML = st.fotos.map((f, i) => {
+          const isAct = i === st.fotoActiva;
+          return `<div class="foto-card ${isAct ? "active" : ""}">
+            <div class="foto-thumb-wrap js-pick-foto" data-idx="${i}" title="Toca para ver en la pieza">
+              <img src="${f.url}" alt="${esc(f.name)}" class="foto-thumb">
+              ${isAct ? '<span class="foto-badge">En la pieza</span>' : ""}
+            </div>
+            <div class="foto-info">
+              <span class="foto-name" title="${esc(f.name)}">${esc(f.name)}</span>
+              <button type="button" class="foto-del js-del-foto" data-idx="${i}" title="Quitar foto" aria-label="Quitar ${esc(f.name)}">×</button>
+            </div>
+          </div>`;
+        }).join("");
+        $$(".js-pick-foto", (el) => {
+          el.onclick = () => {
+            if (cb && cb.onPickFoto)
+              cb.onPickFoto(+el.dataset.idx);
+          };
+        });
+        $$(".js-del-foto", (el) => {
+          el.onclick = (e) => {
+            e.stopPropagation();
+            if (cb && cb.onDelFoto)
+              cb.onDelFoto(+el.dataset.idx);
+          };
+        });
+      }
+    }
+    if (pvStrip && pvThumbs) {
+      if (!st.fotos || st.fotos.length === 0) {
+        pvStrip.hidden = true;
+        pvThumbs.innerHTML = "";
+      } else {
+        pvStrip.hidden = false;
+        pvThumbs.innerHTML = st.fotos.map((f, i) => {
+          const isAct = i === st.fotoActiva;
+          return `<button type="button" class="pv-thumb-btn ${isAct ? "active" : ""} js-pv-pick" data-idx="${i}" title="${esc(f.name)}">
+            <img src="${f.url}" alt="${esc(f.name)}">
+          </button>`;
+        }).join("");
+        $$(".js-pv-pick", (btn) => {
+          btn.onclick = () => {
+            if (cb && cb.onPickFoto)
+              cb.onPickFoto(+btn.dataset.idx);
+          };
+        });
+      }
+    }
+  };
   self.renderCotizador = () => {
     const q = model.getQ();
     const shapes = model.getShapes();
@@ -573,20 +757,25 @@ function View(model, initialCb) {
       cx -= sh.area.w * 0.3;
       cy -= sh.area.w * 0.3;
     }
-    const hasImg = !!st.foto;
+    const activeFoto = st.fotos && st.fotos.length > 0 ? st.fotos[st.fotoActiva || 0] : st.foto ? { url: st.foto, name: st.fotoNombre || "diseño" } : null;
+    const hasImg = !!activeFoto;
     const imgH = W;
     const fs = Math.max(10, W / Math.max(4, txt.length * 0.55)) * le.k * 0.9;
-    const totalH = imgH + (txt ? fs * 1.1 : 0);
+    const textH = txt ? fs * 1.15 : 0;
+    const totalH = (hasImg ? imgH : 0) + (hasImg && txt ? 8 : 0) + textH;
     const top = cy - totalH / 2;
     let design = "";
-    if (hasImg)
-      design += `<image href="${st.foto}" x="${cx - imgH / 2}" y="${top}" width="${imgH}" height="${imgH}" preserveAspectRatio="xMidYMid meet"/>`;
-    if (txt)
-      design += `<text x="${cx}" y="${top + imgH + fs * 0.85}" text-anchor="middle" font-family="${le.f}" font-size="${fs.toFixed(1)}" fill="${col}" stroke-width="${multi !== col ? 0.8 : 0}" stroke="${multi}">${esc(txt)}</text>`;
-    if (!hasImg && !txt) {
-      design = `<text x="${cx}" y="${cy}" text-anchor="middle" font-family="Quicksand, sans-serif" font-size="13" fill="${dark ? "#fdf0f5" : "#6b5f7a"}">Tu bordado aquí</text>`;
+    if (hasImg) {
+      design += `<image href="${activeFoto.url}" x="${cx - imgH / 2}" y="${top}" width="${imgH}" height="${imgH}" preserveAspectRatio="xMidYMid meet"/>`;
     }
-    const r = Math.max(W, totalH) / 2 + 14;
+    const textY = top + (hasImg ? imgH + 8 : 0) + fs * 0.85;
+    if (txt) {
+      design += `<text x="${cx}" y="${textY}" text-anchor="middle" font-family="${le.f}" font-size="${fs.toFixed(1)}" fill="${col}" stroke-width="${multi !== col ? 0.8 : 0}" stroke="${multi}">${esc(txt)}</text>`;
+    }
+    if (!hasImg && !txt) {
+      design = `<text x="${cx}" y="${cy}" text-anchor="middle" font-family="Quicksand, sans-serif" font-size="13" fill="${dark ? "#fdf0f5" : "#6b5f7a"}">Tu diseño o idea aquí</text>`;
+    }
+    const r = Math.max(W, Math.max(totalH, W * 0.85)) / 2 + 14;
     const pv = $("#pv");
     if (pv) {
       pv.innerHTML = `<rect width="400" height="440" fill="transparent"/>${sh.draw(tela.c)}
@@ -594,17 +783,27 @@ function View(model, initialCb) {
     }
     const pvCap = $("#pv-cap");
     if (pvCap) {
-      pvCap.innerHTML = `<b>${q.piezas.find((p) => p.id === st.pieza).n}</b> · ${tela.n} · ${tam.n} (${tam.d})`;
+      let capExtra = "";
+      if (activeFoto) {
+        capExtra = ` · Diseño: <b>${esc(activeFoto.name)}</b>`;
+      } else if (st.ideaSugerida) {
+        capExtra = ` · Idea: <b>${esc(st.ideaSugerida)}</b>`;
+      }
+      pvCap.innerHTML = `<b>${q.piezas.find((p) => p.id === st.pieza).n}</b> · ${tela.n} · ${tam.n} (${tam.d})${capExtra}`;
     }
     self.progress();
   };
   self.progress = () => {
+    const isMobile = typeof navigator !== "undefined" && (/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent));
     const st = model.getState();
     const txtInput = $("#q-texto");
     const txt = txtInput ? txtInput.value.trim() : "";
+    const notasInput = $("#q-notas");
+    const notasVal = notasInput ? notasInput.value.trim() : "";
     const nameInput = $("#q-nombre");
     const nameVal = nameInput ? nameInput.value.trim() : "";
-    const done = [true, !!(st.foto || txt), st.hilos.length > 0, !!nameVal];
+    const hasDesign = isMobile && st.fotos && st.fotos.length > 0 || !!st.ideaSugerida || !!txt || !isMobile && !!notasVal;
+    const done = [true, hasDesign, st.hilos.length > 0, !!nameVal];
     done.forEach((d, i) => {
       const el = $("#ok" + (i + 1));
       if (el)
@@ -646,45 +845,44 @@ function View(model, initialCb) {
     if (el)
       el.addEventListener("input", () => self.renderCotizador());
   });
-  function loadFile(file) {
-    if (!file || !file.type.startsWith("image/")) {
-      self.showErr("El archivo debe ser una imagen (JPG o PNG).");
+  function loadFiles(fileList) {
+    if (!fileList || fileList.length === 0)
+      return;
+    const files = Array.from(fileList).filter((f) => f.type.startsWith("image/"));
+    if (files.length === 0) {
+      self.showErr("Selecciona al menos un archivo de imagen (JPG o PNG).");
       return;
     }
-    const fr = new FileReader;
-    fr.onload = () => {
-      const im = new Image;
-      im.onload = () => {
-        const m = 700, k = Math.min(1, m / Math.max(im.width, im.height));
-        const c = document.createElement("canvas");
-        c.width = im.width * k;
-        c.height = im.height * k;
-        c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
-        if (cb && cb.onFoto)
-          cb.onFoto(c.toDataURL("image/jpeg", 0.85), file.name);
-        const dropImg = $("#drop-img");
-        if (dropImg) {
-          dropImg.src = model.getState().foto;
-          dropImg.hidden = false;
-        }
-        const dropT = $("#drop-t");
-        if (dropT)
-          dropT.textContent = "Foto lista";
-        const dropS = $("#drop-s");
-        if (dropS)
-          dropS.textContent = file.name;
-        const qFotoX = $("#q-foto-x");
-        if (qFotoX)
-          qFotoX.hidden = false;
-        self.renderCotizador();
+    self.showErr("");
+    files.forEach((file) => {
+      const fr = new FileReader;
+      fr.onload = () => {
+        const im = new Image;
+        im.onload = () => {
+          const m = 700, k = Math.min(1, m / Math.max(im.width, im.height));
+          const c = document.createElement("canvas");
+          c.width = im.width * k;
+          c.height = im.height * k;
+          c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+          if (cb && cb.onFoto)
+            cb.onFoto(c.toDataURL("image/jpeg", 0.85), file.name, file);
+        };
+        im.src = fr.result;
       };
-      im.src = fr.result;
-    };
-    fr.readAsDataURL(file);
+      fr.readAsDataURL(file);
+    });
   }
   const qFoto = $("#q-foto");
-  if (qFoto)
-    qFoto.addEventListener("change", (e) => loadFile(e.target.files[0]));
+  if (qFoto) {
+    qFoto.addEventListener("change", (e) => {
+      loadFiles(e.target.files);
+      qFoto.value = "";
+    });
+  }
+  const qFotosAdd = $("#q-fotos-add");
+  if (qFotosAdd && qFoto) {
+    qFotosAdd.onclick = () => qFoto.click();
+  }
   const drop = $("#drop");
   if (drop) {
     ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => {
@@ -695,30 +893,16 @@ function View(model, initialCb) {
       e.preventDefault();
       drop.classList.remove("over");
     }));
-    drop.addEventListener("drop", (e) => loadFile(e.dataTransfer.files[0]));
-  }
-  const qFotoX = $("#q-foto-x");
-  if (qFotoX) {
-    qFotoX.onclick = () => {
-      if (cb && cb.limpiarFoto)
-        cb.limpiarFoto();
-      if (qFoto)
-        qFoto.value = "";
-      const dropImg = $("#drop-img");
-      if (dropImg)
-        dropImg.hidden = true;
-      const dropT = $("#drop-t");
-      if (dropT)
-        dropT.textContent = "Sube la foto o dibujo del bordado";
-      const dropS = $("#drop-s");
-      if (dropS)
-        dropS.textContent = "JPG o PNG. Toca aquí o arrastra la imagen.";
-      qFotoX.hidden = true;
-      self.renderCotizador();
-    };
+    drop.addEventListener("drop", (e) => {
+      e.preventDefault();
+      drop.classList.remove("over");
+      if (e.dataTransfer && e.dataTransfer.files) {
+        loadFiles(e.dataTransfer.files);
+      }
+    });
   }
   if (qform) {
-    qform.addEventListener("submit", (e) => {
+    qform.addEventListener("submit", async (e) => {
       e.preventDefault();
       const nameInput = $("#q-nombre");
       if (!nameInput || !nameInput.value.trim()) {
@@ -727,21 +911,52 @@ function View(model, initialCb) {
           nameInput.focus();
         return;
       }
+      const isMobile = typeof navigator !== "undefined" && (/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent));
       const st = model.getState();
       const txtInput = $("#q-texto");
       const notasInput = $("#q-notas");
       const hasTxt = txtInput && txtInput.value.trim();
       const hasNotas = notasInput && notasInput.value.trim();
-      if (!st.foto && !hasTxt && !hasNotas) {
-        self.showErr("Sube una foto de tu diseño, escribe un texto o descríbelo en las notas.");
+      const hasDesign = isMobile && st.fotos && st.fotos.length > 0 || !!st.ideaSugerida || !!hasTxt || !!hasNotas;
+      if (!hasDesign) {
+        if (isMobile) {
+          self.showErr("Sube al menos una foto de tu diseño, escribe un texto o descríbelo en las notas.");
+        } else {
+          self.showErr("Escribe un texto bordado, descríbelo en las notas o elige una idea.");
+        }
         return;
       }
       self.showErr("");
-      if (cb && cb.onEnviar)
-        cb.onEnviar(st);
+      const sendBtn = $("#q-send");
+      const origHtml = sendBtn ? sendBtn.innerHTML : "";
+      if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.textContent = "Abriendo WhatsApp...";
+      }
+      try {
+        if (cb && cb.onEnviar) {
+          await cb.onEnviar(model.getState());
+        }
+      } finally {
+        if (sendBtn) {
+          sendBtn.disabled = false;
+          sendBtn.innerHTML = origHtml;
+        }
+      }
       const qDoneFoto = $("#q-done-foto");
-      if (qDoneFoto)
-        qDoneFoto.hidden = !st.foto;
+      if (qDoneFoto) {
+        const latestSt = model.getState();
+        const fotosReales = (latestSt.fotos || []).filter((f) => !f.isIdea);
+        if (isMobile && fotosReales.length > 0) {
+          qDoneFoto.hidden = false;
+          qDoneFoto.textContent = `Tus ${fotosReales.length} fotografía(s) de diseño se enviarán directamente en el chat de WhatsApp.`;
+        } else if (latestSt.ideaSugerida) {
+          qDoneFoto.hidden = false;
+          qDoneFoto.textContent = `Cuéntanos los detalles de tu idea «${latestSt.ideaSugerida}» al iniciar la conversación.`;
+        } else {
+          qDoneFoto.hidden = true;
+        }
+      }
       const qDone = $("#q-done");
       if (qDone)
         qDone.hidden = false;
@@ -820,20 +1035,59 @@ function Controller(model, view, config) {
       model.setHilos(idxs);
       view.renderCotizador();
     },
-    onFoto: (dataUrl, nombre) => {
-      model.setFoto(dataUrl, nombre);
+    onFoto: (dataUrl, nombre, rawFile) => {
+      model.addFoto(dataUrl, nombre, false, rawFile);
+      view.renderCotizador();
+      view.renderFotos();
+      view.buildIdeas();
+    },
+    onPickFoto: (idx) => {
+      model.setFotoActiva(idx);
+      view.renderCotizador();
+      view.renderFotos();
+    },
+    onDelFoto: (idx) => {
+      model.removeFoto(idx);
+      view.renderCotizador();
+      view.renderFotos();
+      view.buildIdeas();
+    },
+    onIdea: (idea) => {
+      model.setIdeaSugerida(idea);
+      view.renderCotizador();
+      view.renderFotos();
+      view.buildIdeas();
     },
     limpiarFoto: () => {
-      model.limpiarFoto();
+      model.limpiarFotos();
+      view.renderCotizador();
+      view.renderFotos();
+      view.buildIdeas();
     },
-    onEnviar: (st) => {
+    onEnviar: async (st) => {
       const msg = cb.mensaje();
       const url = "https://wa.me/" + config.whatsapp + "?text=" + encodeURIComponent(msg);
       const qWaLink = document.getElementById("q-wa-link");
       if (qWaLink)
         qWaLink.href = url;
+      const isMobile = typeof navigator !== "undefined" && (/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent));
+      const rawFiles = model.getRawFiles ? model.getRawFiles() : [];
+      if (isMobile && rawFiles.length > 0 && typeof navigator !== "undefined" && navigator.canShare) {
+        try {
+          if (navigator.canShare({ files: rawFiles })) {
+            await navigator.share({
+              files: rawFiles,
+              text: msg,
+              title: "Cotización Rococó Handmade"
+            });
+            return;
+          }
+        } catch (shareErr) {
+          if (shareErr.name === "AbortError")
+            return;
+        }
+      }
       try {
-        const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         if (isMobile) {
           window.location.href = url;
         } else {
@@ -886,7 +1140,15 @@ function Controller(model, view, config) {
           fechaStr = fechaVal;
         }
       }
-      const disenoTexto = st.foto ? st.fotoNombre ? `${st.fotoNombre} (adjunto la imagen a continuación)` : "Foto cargada (adjunto la imagen a continuación)" : "Sin foto adjunta (ver texto y notas)";
+      let disenoTexto = "Sin fotos adjuntas (ver texto y notas)";
+      const fotosReales = (st.fotos || []).filter((f) => !f.isIdea);
+      const isMobile = typeof navigator !== "undefined" && (/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent));
+      if (isMobile && fotosReales.length > 0) {
+        const nombres = fotosReales.map((f) => f.name).join(", ");
+        disenoTexto = `${fotosReales.length} fotografía(s) adjunta(s): ${nombres}`;
+      } else if (st.ideaSugerida) {
+        disenoTexto = `Idea de catálogo: «${st.ideaSugerida}»`;
+      }
       const lines = [
         "✨ *Solicitud de Cotización Personalizada - Rococó Handmade* ✨",
         "",
@@ -900,7 +1162,7 @@ function Controller(model, view, config) {
         "• Colores de hilo: " + hilosTexto,
         "",
         "\uD83C\uDFA8 *Diseño y bordado:*",
-        "• Foto / Diseño: " + disenoTexto,
+        "• Fotografías / Diseño: " + disenoTexto,
         "• Texto bordado: " + (textoBordado ? `«${textoBordado}»` : "Sin texto bordado"),
         "• Tipo de letra: " + letraNombre,
         "",
@@ -911,8 +1173,10 @@ function Controller(model, view, config) {
         "• Fecha deseada: " + fechaStr,
         "• Notas para la bordadora: " + (notas || "Ninguna")
       ];
-      if (st.foto) {
-        lines.push("", "\uD83D\uDCCE _(Adjunto la foto de mi diseño a continuación en este chat)_");
+      if (isMobile && fotosReales.length > 0) {
+        lines.push("", `\uD83D\uDCCE _(Adjunto mis ${fotosReales.length} fotografía(s) de diseño en este mensaje)_`);
+      } else if (st.ideaSugerida) {
+        lines.push("", `\uD83D\uDCA1 _(Me gustaría un diseño basado en la idea de: ${st.ideaSugerida})_`);
       }
       return lines.join(`
 `);
@@ -991,7 +1255,7 @@ function Router() {
 // rococo-handmade/js/main.js
 function initApp() {
   try {
-    const model = Model({ productos: PRODUCTOS, cats: CATS, q: Q, shapes: SHAPES, cat2pieza: CAT2PIEZA });
+    const model = Model({ productos: PRODUCTOS, cats: CATS, q: Q, shapes: SHAPES, cat2pieza: CAT2PIEZA, ideas: IDEAS_BORDADO });
     const view = View(model, null);
     const controller = Controller(model, view, { ...config_default, cat2pieza: CAT2PIEZA });
     if (view && view.setController)
@@ -1002,6 +1266,10 @@ function initApp() {
     view.renderFilters();
     view.renderGrid();
     view.buildOpts();
+    if (view.buildIdeas)
+      view.buildIdeas();
+    if (view.renderFotos)
+      view.renderFotos();
     view.renderCotizador();
     router.init();
   } catch (err) {

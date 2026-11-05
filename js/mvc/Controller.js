@@ -24,16 +24,66 @@ export default function Controller(model, view, config) {
     onTam: i => { model.setTam(i); view.renderCotizador(); },
     onPos: v => { model.setPos(v); view.renderCotizador(); },
     onHilos: idxs => { model.setHilos(idxs); view.renderCotizador(); },
-    onFoto: (dataUrl, nombre) => { model.setFoto(dataUrl, nombre); },
-    limpiarFoto: () => { model.limpiarFoto(); },
-    onEnviar: st => {
+    onFoto: (dataUrl, nombre, rawFile) => {
+      model.addFoto(dataUrl, nombre, false, rawFile);
+      view.renderCotizador();
+      view.renderFotos();
+      view.buildIdeas();
+    },
+    onPickFoto: idx => {
+      model.setFotoActiva(idx);
+      view.renderCotizador();
+      view.renderFotos();
+    },
+    onDelFoto: idx => {
+      model.removeFoto(idx);
+      view.renderCotizador();
+      view.renderFotos();
+      view.buildIdeas();
+    },
+    onIdea: idea => {
+      model.setIdeaSugerida(idea);
+      view.renderCotizador();
+      view.renderFotos();
+      view.buildIdeas();
+    },
+    limpiarFoto: () => {
+      model.limpiarFotos();
+      view.renderCotizador();
+      view.renderFotos();
+      view.buildIdeas();
+    },
+    onEnviar: async st => {
       const msg = cb.mensaje();
       const url = "https://wa.me/" + config.whatsapp + "?text=" + encodeURIComponent(msg);
       const qWaLink = document.getElementById("q-wa-link");
       if (qWaLink) qWaLink.href = url;
 
+      const isMobile = typeof navigator !== "undefined" && (
+        /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent))
+      );
+
+      const rawFiles = model.getRawFiles ? model.getRawFiles() : [];
+
+      // En móvil: mandar las fotos adjuntas vía Web Share API directamente a WhatsApp
+      if (isMobile && rawFiles.length > 0 && typeof navigator !== "undefined" && navigator.canShare) {
+        try {
+          if (navigator.canShare({ files: rawFiles })) {
+            await navigator.share({
+              files: rawFiles,
+              text: msg,
+              title: "Cotización Rococó Handmade",
+            });
+            return;
+          }
+        } catch (shareErr) {
+          if (shareErr.name === "AbortError") return;
+        }
+      }
+
+      // En computadora o respaldo: abrir WhatsApp con el mensaje completo
       try {
-        const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         if (isMobile) {
           window.location.href = url;
         } else {
@@ -90,9 +140,19 @@ export default function Controller(model, view, config) {
         }
       }
 
-      const disenoTexto = st.foto
-        ? (st.fotoNombre ? `${st.fotoNombre} (adjunto la imagen a continuación)` : "Foto cargada (adjunto la imagen a continuación)")
-        : "Sin foto adjunta (ver texto y notas)";
+      let disenoTexto = "Sin fotos adjuntas (ver texto y notas)";
+      const fotosReales = (st.fotos || []).filter(f => !f.isIdea);
+      const isMobile = typeof navigator !== "undefined" && (
+        /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent))
+      );
+
+      if (isMobile && fotosReales.length > 0) {
+        const nombres = fotosReales.map(f => f.name).join(", ");
+        disenoTexto = `${fotosReales.length} fotografía(s) adjunta(s): ${nombres}`;
+      } else if (st.ideaSugerida) {
+        disenoTexto = `Idea de catálogo: «${st.ideaSugerida}»`;
+      }
 
       const lines = [
         "✨ *Solicitud de Cotización Personalizada - Rococó Handmade* ✨",
@@ -107,7 +167,7 @@ export default function Controller(model, view, config) {
         "• Colores de hilo: " + hilosTexto,
         "",
         "🎨 *Diseño y bordado:*",
-        "• Foto / Diseño: " + disenoTexto,
+        "• Fotografías / Diseño: " + disenoTexto,
         "• Texto bordado: " + (textoBordado ? `«${textoBordado}»` : "Sin texto bordado"),
         "• Tipo de letra: " + letraNombre,
         "",
@@ -119,8 +179,10 @@ export default function Controller(model, view, config) {
         "• Notas para la bordadora: " + (notas || "Ninguna"),
       ];
 
-      if (st.foto) {
-        lines.push("", "📎 _(Adjunto la foto de mi diseño a continuación en este chat)_");
+      if (isMobile && fotosReales.length > 0) {
+        lines.push("", `📎 _(Adjunto mis ${fotosReales.length} fotografía(s) de diseño en este mensaje)_`);
+      } else if (st.ideaSugerida) {
+        lines.push("", `💡 _(Me gustaría un diseño basado en la idea de: ${st.ideaSugerida})_`);
       }
 
       return lines.join("\n");

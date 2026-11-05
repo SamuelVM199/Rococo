@@ -177,6 +177,102 @@ export default function View(model, initialCb) {
     chips($("#o-hilo"), q.hilos, "hilo", "checkbox", (it, i) => st.hilos.includes(i), it => sw(it.c) + it.n);
   };
 
+  self.buildIdeas = () => {
+    const ideas = model.getIdeas ? model.getIdeas() : [];
+    const box = $("#pv-ideas-chips");
+    if (!box) return;
+    const st = model.getState();
+    box.innerHTML = ideas.map(idea => {
+      const isAct = st.ideaSugerida === idea.n;
+      return `<button type="button" class="pv-idea-chip ${isAct ? 'active' : ''}" data-id="${esc(idea.id)}" title="${esc(idea.desc)}">
+        <img src="${esc(idea.img)}" alt="">
+        <span>${esc(idea.n)}</span>
+      </button>`;
+    }).join("");
+    $$(".pv-idea-chip", btn => {
+      btn.onclick = () => {
+        const id = btn.dataset.id;
+        const idea = ideas.find(it => it.id === id);
+        if (idea && cb && cb.onIdea) cb.onIdea(idea);
+      };
+    });
+  };
+
+  self.renderFotos = () => {
+    const isMobile = typeof navigator !== "undefined" && (
+      /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent))
+    );
+
+    const desktopNotice = $("#notice-desktop-foto");
+    const mobileWrap = $("#wrap-mobile-foto");
+    if (desktopNotice && mobileWrap) {
+      desktopNotice.hidden = isMobile;
+      mobileWrap.hidden = !isMobile;
+    }
+
+    const st = model.getState();
+    const list = $("#q-fotos-list");
+    const addBtn = $("#q-fotos-add");
+    const pvStrip = $("#pv-fotos-strip");
+    const pvThumbs = $("#pv-fotos-thumbs");
+    if (list) {
+      if (!st.fotos || st.fotos.length === 0) {
+        list.hidden = true;
+        list.innerHTML = "";
+        if (addBtn) addBtn.hidden = true;
+        const dropT = $("#drop-t"); if (dropT) dropT.textContent = "Sube tus fotos o dibujos del bordado";
+        const dropS = $("#drop-s"); if (dropS) dropS.textContent = "Puedes seleccionar varias fotos (JPG o PNG). Toca aquí o arrástralas.";
+      } else {
+        list.hidden = false;
+        if (addBtn) addBtn.hidden = false;
+        const dropT = $("#drop-t"); if (dropT) dropT.textContent = `${st.fotos.length} fotografía(s) de diseño`;
+        const dropS = $("#drop-s"); if (dropS) dropS.textContent = "Toca para agregar más fotos o arrástralas aquí.";
+        list.innerHTML = st.fotos.map((f, i) => {
+          const isAct = i === st.fotoActiva;
+          return `<div class="foto-card ${isAct ? 'active' : ''}">
+            <div class="foto-thumb-wrap js-pick-foto" data-idx="${i}" title="Toca para ver en la pieza">
+              <img src="${f.url}" alt="${esc(f.name)}" class="foto-thumb">
+              ${isAct ? '<span class="foto-badge">En la pieza</span>' : ''}
+            </div>
+            <div class="foto-info">
+              <span class="foto-name" title="${esc(f.name)}">${esc(f.name)}</span>
+              <button type="button" class="foto-del js-del-foto" data-idx="${i}" title="Quitar foto" aria-label="Quitar ${esc(f.name)}">×</button>
+            </div>
+          </div>`;
+        }).join("");
+
+        $$(".js-pick-foto", el => {
+          el.onclick = () => { if (cb && cb.onPickFoto) cb.onPickFoto(+el.dataset.idx); };
+        });
+        $$(".js-del-foto", el => {
+          el.onclick = e => {
+            e.stopPropagation();
+            if (cb && cb.onDelFoto) cb.onDelFoto(+el.dataset.idx);
+          };
+        });
+      }
+    }
+
+    if (pvStrip && pvThumbs) {
+      if (!st.fotos || st.fotos.length === 0) {
+        pvStrip.hidden = true;
+        pvThumbs.innerHTML = "";
+      } else {
+        pvStrip.hidden = false;
+        pvThumbs.innerHTML = st.fotos.map((f, i) => {
+          const isAct = i === st.fotoActiva;
+          return `<button type="button" class="pv-thumb-btn ${isAct ? 'active' : ''} js-pv-pick" data-idx="${i}" title="${esc(f.name)}">
+            <img src="${f.url}" alt="${esc(f.name)}">
+          </button>`;
+        }).join("");
+        $$(".js-pv-pick", btn => {
+          btn.onclick = () => { if (cb && cb.onPickFoto) cb.onPickFoto(+btn.dataset.idx); };
+        });
+      }
+    }
+  };
+
   self.renderCotizador = () => {
     const q = model.getQ();
     const shapes = model.getShapes();
@@ -195,18 +291,29 @@ export default function View(model, initialCb) {
     let cx = sh.area.x, cy = sh.area.y;
     if (st.pos === "esquina") { cx += sh.area.w * 0.34; cy += sh.area.w * 0.32; }
     if (st.pos === "arriba")  { cx -= sh.area.w * 0.3;  cy -= sh.area.w * 0.3;  }
-    const hasImg = !!st.foto;
+
+    const activeFoto = st.fotos && st.fotos.length > 0
+      ? st.fotos[st.fotoActiva || 0]
+      : (st.foto ? { url: st.foto, name: st.fotoNombre || "diseño" } : null);
+
+    const hasImg = !!activeFoto;
     const imgH = W;
     const fs = Math.max(10, W / Math.max(4, txt.length * 0.55)) * le.k * 0.9;
-    const totalH = imgH + (txt ? fs * 1.1 : 0);
+    const textH = txt ? fs * 1.15 : 0;
+    const totalH = (hasImg ? imgH : 0) + (hasImg && txt ? 8 : 0) + textH;
     const top = cy - totalH / 2;
     let design = "";
-    if (hasImg) design += `<image href="${st.foto}" x="${cx - imgH / 2}" y="${top}" width="${imgH}" height="${imgH}" preserveAspectRatio="xMidYMid meet"/>`;
-    if (txt)    design += `<text x="${cx}" y="${top + imgH + fs * 0.85}" text-anchor="middle" font-family="${le.f}" font-size="${fs.toFixed(1)}" fill="${col}" stroke-width="${multi !== col ? 0.8 : 0}" stroke="${multi}">${esc(txt)}</text>`;
-    if (!hasImg && !txt) {
-      design = `<text x="${cx}" y="${cy}" text-anchor="middle" font-family="Quicksand, sans-serif" font-size="13" fill="${dark ? '#fdf0f5' : '#6b5f7a'}">Tu bordado aquí</text>`;
+    if (hasImg) {
+      design += `<image href="${activeFoto.url}" x="${cx - imgH / 2}" y="${top}" width="${imgH}" height="${imgH}" preserveAspectRatio="xMidYMid meet"/>`;
     }
-    const r = Math.max(W, totalH) / 2 + 14;
+    const textY = top + (hasImg ? imgH + 8 : 0) + fs * 0.85;
+    if (txt) {
+      design += `<text x="${cx}" y="${textY}" text-anchor="middle" font-family="${le.f}" font-size="${fs.toFixed(1)}" fill="${col}" stroke-width="${multi !== col ? 0.8 : 0}" stroke="${multi}">${esc(txt)}</text>`;
+    }
+    if (!hasImg && !txt) {
+      design = `<text x="${cx}" y="${cy}" text-anchor="middle" font-family="Quicksand, sans-serif" font-size="13" fill="${dark ? '#fdf0f5' : '#6b5f7a'}">Tu diseño o idea aquí</text>`;
+    }
+    const r = Math.max(W, Math.max(totalH, W * 0.85)) / 2 + 14;
     const pv = $("#pv");
     if (pv) {
       pv.innerHTML = `<rect width="400" height="440" fill="transparent"/>${sh.draw(tela.c)}
@@ -214,22 +321,34 @@ export default function View(model, initialCb) {
     }
     const pvCap = $("#pv-cap");
     if (pvCap) {
-      pvCap.innerHTML = `<b>${q.piezas.find(p => p.id === st.pieza).n}</b> · ${tela.n} · ${tam.n} (${tam.d})`;
+      let capExtra = "";
+      if (activeFoto) {
+        capExtra = ` · Diseño: <b>${esc(activeFoto.name)}</b>`;
+      } else if (st.ideaSugerida) {
+        capExtra = ` · Idea: <b>${esc(st.ideaSugerida)}</b>`;
+      }
+      pvCap.innerHTML = `<b>${q.piezas.find(p => p.id === st.pieza).n}</b> · ${tela.n} · ${tam.n} (${tam.d})${capExtra}`;
     }
     self.progress();
   };
 
   self.progress = () => {
+    const isMobile = typeof navigator !== "undefined" && (
+      /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent))
+    );
     const st = model.getState();
     const txtInput = $("#q-texto");
     const txt = txtInput ? txtInput.value.trim() : "";
+    const notasInput = $("#q-notas");
+    const notasVal = notasInput ? notasInput.value.trim() : "";
     const nameInput = $("#q-nombre");
     const nameVal = nameInput ? nameInput.value.trim() : "";
-    const done = [true, !!(st.foto || txt), st.hilos.length > 0, !!nameVal];
+    const hasDesign = (isMobile && st.fotos && st.fotos.length > 0) || !!st.ideaSugerida || !!txt || (!isMobile && !!notasVal);
+    const done = [true, hasDesign, st.hilos.length > 0, !!nameVal];
     done.forEach((d, i) => { const el = $("#ok" + (i + 1)); if (el) el.textContent = d ? "✓ listo" : ""; });
     const prog = $("#qprog"); if (prog) prog.style.width = (done.filter(Boolean).length / 4 * 100) + "%";
   };
-
   self.showErr = (m) => {
     const e = $("#q-err");
     if (e) {
@@ -257,55 +376,66 @@ export default function View(model, initialCb) {
     if (el) el.addEventListener("input", () => self.renderCotizador());
   });
 
-  /* foto */
-  function loadFile(file) {
-    if (!file || !file.type.startsWith("image/")) { self.showErr("El archivo debe ser una imagen (JPG o PNG)."); return; }
-    const fr = new FileReader();
-    fr.onload = () => {
-      const im = new Image();
-      im.onload = () => {
-        const m = 700, k = Math.min(1, m / Math.max(im.width, im.height));
-        const c = document.createElement("canvas"); c.width = im.width * k; c.height = im.height * k;
-        c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
-        if (cb && cb.onFoto) cb.onFoto(c.toDataURL("image/jpeg", 0.85), file.name);
-        const dropImg = $("#drop-img");
-        if (dropImg) {
-          dropImg.src = model.getState().foto;
-          dropImg.hidden = false;
-        }
-        const dropT = $("#drop-t"); if (dropT) dropT.textContent = "Foto lista";
-        const dropS = $("#drop-s"); if (dropS) dropS.textContent = file.name;
-        const qFotoX = $("#q-foto-x"); if (qFotoX) qFotoX.hidden = false;
-        self.renderCotizador();
+  /* fotografías de diseño */
+  function loadFiles(fileList) {
+    if (!fileList || fileList.length === 0) return;
+    const files = Array.from(fileList).filter(f => f.type.startsWith("image/"));
+    if (files.length === 0) {
+      self.showErr("Selecciona al menos un archivo de imagen (JPG o PNG).");
+      return;
+    }
+    self.showErr("");
+    files.forEach(file => {
+      const fr = new FileReader();
+      fr.onload = () => {
+        const im = new Image();
+        im.onload = () => {
+          const m = 700, k = Math.min(1, m / Math.max(im.width, im.height));
+          const c = document.createElement("canvas");
+          c.width = im.width * k;
+          c.height = im.height * k;
+          c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+          if (cb && cb.onFoto) cb.onFoto(c.toDataURL("image/jpeg", 0.85), file.name, file);
+        };
+        im.src = fr.result;
       };
-      im.src = fr.result;
-    };
-    fr.readAsDataURL(file);
+      fr.readAsDataURL(file);
+    });
   }
+
   const qFoto = $("#q-foto");
-  if (qFoto) qFoto.addEventListener("change", e => loadFile(e.target.files[0]));
+  if (qFoto) {
+    qFoto.addEventListener("change", e => {
+      loadFiles(e.target.files);
+      qFoto.value = "";
+    });
+  }
+  const qFotosAdd = $("#q-fotos-add");
+  if (qFotosAdd && qFoto) {
+    qFotosAdd.onclick = () => qFoto.click();
+  }
   const drop = $("#drop");
   if (drop) {
-    ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
-    ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
-    drop.addEventListener("drop", e => loadFile(e.dataTransfer.files[0]));
-  }
-  const qFotoX = $("#q-foto-x");
-  if (qFotoX) {
-    qFotoX.onclick = () => {
-      if (cb && cb.limpiarFoto) cb.limpiarFoto();
-      if (qFoto) qFoto.value = "";
-      const dropImg = $("#drop-img"); if (dropImg) dropImg.hidden = true;
-      const dropT = $("#drop-t"); if (dropT) dropT.textContent = "Sube la foto o dibujo del bordado";
-      const dropS = $("#drop-s"); if (dropS) dropS.textContent = "JPG o PNG. Toca aquí o arrastra la imagen.";
-      qFotoX.hidden = true;
-      self.renderCotizador();
-    };
+    ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => {
+      e.preventDefault();
+      drop.classList.add("over");
+    }));
+    ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => {
+      e.preventDefault();
+      drop.classList.remove("over");
+    }));
+    drop.addEventListener("drop", e => {
+      e.preventDefault();
+      drop.classList.remove("over");
+      if (e.dataTransfer && e.dataTransfer.files) {
+        loadFiles(e.dataTransfer.files);
+      }
+    });
   }
 
   /* envío */
   if (qform) {
-    qform.addEventListener("submit", e => {
+    qform.addEventListener("submit", async e => {
       e.preventDefault();
       const nameInput = $("#q-nombre");
       if (!nameInput || !nameInput.value.trim()) {
@@ -313,19 +443,60 @@ export default function View(model, initialCb) {
         if (nameInput) nameInput.focus();
         return;
       }
+      const isMobile = typeof navigator !== "undefined" && (
+        /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent))
+      );
       const st = model.getState();
       const txtInput = $("#q-texto");
       const notasInput = $("#q-notas");
       const hasTxt = txtInput && txtInput.value.trim();
       const hasNotas = notasInput && notasInput.value.trim();
-      if (!st.foto && !hasTxt && !hasNotas) {
-        self.showErr("Sube una foto de tu diseño, escribe un texto o descríbelo en las notas.");
+      const hasDesign = (isMobile && st.fotos && st.fotos.length > 0) || !!st.ideaSugerida || !!hasTxt || !!hasNotas;
+      if (!hasDesign) {
+        if (isMobile) {
+          self.showErr("Sube al menos una foto de tu diseño, escribe un texto o descríbelo en las notas.");
+        } else {
+          self.showErr("Escribe un texto bordado, descríbelo en las notas o elige una idea.");
+        }
         return;
       }
       self.showErr("");
-      if (cb && cb.onEnviar) cb.onEnviar(st);
-      const qDoneFoto = $("#q-done-foto"); if (qDoneFoto) qDoneFoto.hidden = !st.foto;
-      const qDone = $("#q-done"); if (qDone) qDone.hidden = false;
+
+      const sendBtn = $("#q-send");
+      const origHtml = sendBtn ? sendBtn.innerHTML : "";
+      if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.textContent = "Abriendo WhatsApp...";
+      }
+
+      try {
+        if (cb && cb.onEnviar) {
+          await cb.onEnviar(model.getState());
+        }
+      } finally {
+        if (sendBtn) {
+          sendBtn.disabled = false;
+          sendBtn.innerHTML = origHtml;
+        }
+      }
+
+      const qDoneFoto = $("#q-done-foto");
+      if (qDoneFoto) {
+        const latestSt = model.getState();
+        const fotosReales = (latestSt.fotos || []).filter(f => !f.isIdea);
+        if (isMobile && fotosReales.length > 0) {
+          qDoneFoto.hidden = false;
+          qDoneFoto.textContent = `Tus ${fotosReales.length} fotografía(s) de diseño se enviarán directamente en el chat de WhatsApp.`;
+        } else if (latestSt.ideaSugerida) {
+          qDoneFoto.hidden = false;
+          qDoneFoto.textContent = `Cuéntanos los detalles de tu idea «${latestSt.ideaSugerida}» al iniciar la conversación.`;
+        } else {
+          qDoneFoto.hidden = true;
+        }
+      }
+      const qDone = $("#q-done");
+      if (qDone) qDone.hidden = false;
     });
   }
 

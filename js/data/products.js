@@ -137,3 +137,13 @@ export const SHAPES = {
 };
 
 export const CAT2PIEZA = {tote: "tote", jareta: "jareta", cosmetiquera: "cosmetiquera", ropa: "sudadera"};
+
+/* Ideas de inspiración de bordado */
+export const IDEAS_BORDADO = [
+  { id: "perrito", n: "Mascota", img: "img/sudadera-perrito.jpg", desc: "Bordado de tu mascota favorita" },
+  { id: "ojo", n: "Ojo místico", img: "img/tote-ojo.jpg", desc: "Ojo protector con rayos dorados" },
+  { id: "cereza", n: "Cerezas", img: "img/jareta-cereza.jpg", desc: "Frutas y elementos botánicos" },
+  { id: "corazoncitos", n: "Corazoncitos", img: "img/tote-corazoncitos-1.jpg", desc: "Pequeños corazones bordados a mano" },
+  { id: "flores", n: "Flores", img: "img/jareta-vichy-rosa-1.jpg", desc: "Flores artesanales en relieve" },
+  { id: "jirafas", n: "Animales", img: "img/cosmetiquera-jirafas.jpg", desc: "Diseño tierno con árboles y sol" },
+];

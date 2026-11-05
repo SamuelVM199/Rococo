@@ -145,6 +145,18 @@
               <rect width="400" height="440" fill="transparent"></rect>
             </svg>
             <div class="cap"><span id="pv-cap">Tote bag · Manta natural · Mediano (hasta 10 cm)</span><span>Vista previa ilustrativa</span></div>
+
+            <div class="pv-panel" id="pv-panel">
+              <div id="pv-fotos-strip" class="pv-fotos-strip" hidden>
+                <span class="pv-sub">Tus fotografías de diseño (toca para ver en la pieza):</span>
+                <div id="pv-fotos-thumbs" class="pv-thumbs-row"></div>
+              </div>
+
+              <div class="pv-ideas-box" id="pv-ideas-box">
+                <span class="pv-sub">💡 ¿Buscas ideas? Toca una para verla en la pieza:</span>
+                <div id="pv-ideas-chips" class="pv-ideas-chips"></div>
+              </div>
+            </div>
           </div>
 
           <form class="form" id="qform" novalidate>
@@ -159,13 +171,35 @@
 
             <fieldset>
               <legend><span class="num">2</span>Tu diseño de bordado <span class="ok" id="ok2"></span></legend>
-              <label class="drop" id="drop" for="q-foto">
-                <img id="drop-img" alt="" hidden="">
-                <span class="t"><b id="drop-t">Sube la foto o dibujo del bordado</b><span id="drop-s">JPG o PNG. Toca aquí o arrastra la imagen.</span></span>
-              </label>
-              <input type="file" id="q-foto" accept="image/*" hidden="">
-              <button type="button" class="linkbtn" id="q-foto-x" hidden="">Quitar foto</button>
-              <div class="fld"><label class="lbl" for="q-texto">Texto bordado (opcional)</label><input type="text" id="q-texto" maxlength="28" placeholder="Ej. Mariana, M&amp;J, Hecho con amor"></div>
+              
+              <!-- Anuncio exclusivo para computadoras -->
+              <div class="mobile-notice" id="notice-desktop-foto">
+                <span class="mobile-notice-tag">📱 Función solo disponible en dispositivos móviles</span>
+                <p>Para adjuntar fotografías de tu diseño directamente a WhatsApp, ingresa a este cotizador desde tu teléfono celular. En computadora puedes describir tu idea en las notas o escribir el texto que deseas bordar.</p>
+              </div>
+
+              <!-- Subida de fotografías para dispositivos móviles -->
+              <div id="wrap-mobile-foto" hidden>
+                <label class="drop" id="drop" for="q-foto">
+                  <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  <span class="t">
+                    <b id="drop-t">Sube tus fotos o dibujos del bordado</b>
+                    <span id="drop-s">Puedes seleccionar varias fotos (JPG o PNG). Toca aquí o arrástralas.</span>
+                  </span>
+                </label>
+                <input type="file" id="q-foto" accept="image/*" multiple hidden>
+                
+                <div id="q-fotos-list" class="fotos-list" hidden></div>
+                <button type="button" class="linkbtn" id="q-fotos-add" hidden style="margin-top:4px">+ Agregar más fotografías</button>
+              </div>
+              <div class="fld" style="margin-top:8px">
+                <label class="lbl" for="q-texto">Texto bordado (opcional)</label>
+                <input type="text" id="q-texto" maxlength="28" placeholder="Ej. Mariana, M&amp;J, Hecho con amor">
+              </div>
               <span class="lbl">Tipo de letra</span>
               <div class="opts" id="o-letra"></div>
             </fieldset>
@@ -216,6 +250,9 @@
                 Enviar cotización por WhatsApp</button>
               <div class="done" id="q-done" hidden="">
                 <b>Tu solicitud se abrió en WhatsApp</b>
+                <p id="q-clip-notice" style="background:rgba(27,109,50,0.12);color:#1b6d32;padding:8px 12px;border-radius:8px;font-weight:700;font-size:.88rem;margin:4px 0" hidden>
+                  📋 ¡Tu imagen de diseño fue copiada! Presiona Pegar (Ctrl + V) en tu chat de WhatsApp para adjuntarla directamente.
+                </p>
                 <ol>
                   <li>Revisa el mensaje con tus datos.</li>
                   <li id="q-done-foto">Adjunta la foto de tu diseño en el chat (clip o cámara).</li>
@@ -424,6 +461,6 @@
     </div>
   </dialog>
 
-  <script defer src="js/bundle.js?v=5"></script>
+  <script defer src="js/bundle.js?v=9"></script>
 </body>
 </html>
