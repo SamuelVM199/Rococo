@@ -53,7 +53,7 @@ export default function Controller(model, view, config) {
       view.renderFotos();
       view.buildIdeas();
     },
-    onEnviar: async st => {
+    onEnviar: st => {
       const msg = cb.mensaje();
       const url = "https://wa.me/" + config.whatsapp + "?text=" + encodeURIComponent(msg);
       const qWaLink = document.getElementById("q-wa-link");
@@ -64,25 +64,7 @@ export default function Controller(model, view, config) {
         (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent))
       );
 
-      const rawFiles = model.getRawFiles ? model.getRawFiles() : [];
-
-      // En móvil: mandar las fotos adjuntas vía Web Share API directamente a WhatsApp
-      if (isMobile && rawFiles.length > 0 && typeof navigator !== "undefined" && navigator.canShare) {
-        try {
-          if (navigator.canShare({ files: rawFiles })) {
-            await navigator.share({
-              files: rawFiles,
-              text: msg,
-              title: "Cotización Rococó Handmade",
-            });
-            return;
-          }
-        } catch (shareErr) {
-          if (shareErr.name === "AbortError") return;
-        }
-      }
-
-      // En computadora o respaldo: abrir WhatsApp con el mensaje completo
+      // Redirigir directamente al chat de WhatsApp con el número oficial (+52 953 175 4972)
       try {
         if (isMobile) {
           window.location.href = url;

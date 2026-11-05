@@ -487,7 +487,7 @@ export default function View(model, initialCb) {
         const fotosReales = (latestSt.fotos || []).filter(f => !f.isIdea);
         if (isMobile && fotosReales.length > 0) {
           qDoneFoto.hidden = false;
-          qDoneFoto.textContent = `Tus ${fotosReales.length} fotografía(s) de diseño se enviarán directamente en el chat de WhatsApp.`;
+          qDoneFoto.textContent = `Adjunta tus ${fotosReales.length} fotografía(s) de diseño en el chat con el icono de clip 📎 o cámara.`;
         } else if (latestSt.ideaSugerida) {
           qDoneFoto.hidden = false;
           qDoneFoto.textContent = `Cuéntanos los detalles de tu idea «${latestSt.ideaSugerida}» al iniciar la conversación.`;
@@ -512,13 +512,7 @@ export default function View(model, initialCb) {
     qCopy.onclick = async () => {
       try {
         if (cb && cb.mensaje) await navigator.clipboard.writeText(cb.mensaje());
-        const orig = qCopy.textContent;
-        qCopy.textContent = "✓ ¡Solicitud copiada al portapapeles!";
-        setTimeout(() => { qCopy.textContent = orig; }, 3500);
-      } catch {
-        const qNotas = $("#q-notas"); if (qNotas) qNotas.focus();
-        qCopy.textContent = "No se pudo copiar automáticamente; copia tus datos manualmente";
-      }
+      } catch {}
     };
   }
 

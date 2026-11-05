@@ -949,7 +949,7 @@ function View(model, initialCb) {
         const fotosReales = (latestSt.fotos || []).filter((f) => !f.isIdea);
         if (isMobile && fotosReales.length > 0) {
           qDoneFoto.hidden = false;
-          qDoneFoto.textContent = `Tus ${fotosReales.length} fotografía(s) de diseño se enviarán directamente en el chat de WhatsApp.`;
+          qDoneFoto.textContent = `Adjunta tus ${fotosReales.length} fotografía(s) de diseño en el chat con el icono de clip \uD83D\uDCCE o cámara.`;
         } else if (latestSt.ideaSugerida) {
           qDoneFoto.hidden = false;
           qDoneFoto.textContent = `Cuéntanos los detalles de tu idea «${latestSt.ideaSugerida}» al iniciar la conversación.`;
@@ -973,17 +973,7 @@ function View(model, initialCb) {
       try {
         if (cb && cb.mensaje)
           await navigator.clipboard.writeText(cb.mensaje());
-        const orig = qCopy.textContent;
-        qCopy.textContent = "✓ ¡Solicitud copiada al portapapeles!";
-        setTimeout(() => {
-          qCopy.textContent = orig;
-        }, 3500);
-      } catch {
-        const qNotas = $("#q-notas");
-        if (qNotas)
-          qNotas.focus();
-        qCopy.textContent = "No se pudo copiar automáticamente; copia tus datos manualmente";
-      }
+      } catch {}
     };
   }
   self.scrollToSection = (id) => {
@@ -1064,29 +1054,13 @@ function Controller(model, view, config) {
       view.renderFotos();
       view.buildIdeas();
     },
-    onEnviar: async (st) => {
+    onEnviar: (st) => {
       const msg = cb.mensaje();
       const url = "https://wa.me/" + config.whatsapp + "?text=" + encodeURIComponent(msg);
       const qWaLink = document.getElementById("q-wa-link");
       if (qWaLink)
         qWaLink.href = url;
       const isMobile = typeof navigator !== "undefined" && (/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent));
-      const rawFiles = model.getRawFiles ? model.getRawFiles() : [];
-      if (isMobile && rawFiles.length > 0 && typeof navigator !== "undefined" && navigator.canShare) {
-        try {
-          if (navigator.canShare({ files: rawFiles })) {
-            await navigator.share({
-              files: rawFiles,
-              text: msg,
-              title: "Cotización Rococó Handmade"
-            });
-            return;
-          }
-        } catch (shareErr) {
-          if (shareErr.name === "AbortError")
-            return;
-        }
-      }
       try {
         if (isMobile) {
           window.location.href = url;
