@@ -24,7 +24,7 @@ var PRODUCTOS = [
   {
     nombre: "Tote Ojo",
     cat: "tote",
-    fotos: ["tote-ojo.jpg"],
+    fotos: ["tote-ojo-mistico.jpg"],
     precio: null,
     medidas: null,
     personalizable: true,
@@ -33,7 +33,7 @@ var PRODUCTOS = [
   {
     nombre: "Bolsa Vichy rosa",
     cat: "jareta",
-    fotos: ["jareta-vichy-rosa-1.jpg", "jareta-vichy-rosa-2.jpg"],
+    fotos: ["jareta-vichy-rosa-flores.jpg"],
     precio: null,
     medidas: null,
     personalizable: false,
@@ -42,20 +42,20 @@ var PRODUCTOS = [
   {
     nombre: "Tote Corazoncitos",
     cat: "tote",
-    fotos: ["tote-corazoncitos-1.jpg", "tote-corazoncitos-2.jpg"],
+    fotos: ["tote-corazoncitos-caminando.jpg", "tote-corazoncitos-pared.jpg"],
     precio: null,
     medidas: null,
     personalizable: false,
-    desc: "Tote de manta con pequeños corazones bordados y asas largas de tela roja."
+    desc: "Tote de manta con pequeños corazones bordados y asas largas de tela roja con moños."
   },
   {
-    nombre: "Bolsa Picnic",
+    nombre: "Bolsa Picnic Cerezas",
     cat: "jareta",
-    fotos: ["jareta-picnic.jpg"],
+    fotos: ["jareta-vichy-cerezas-1.jpg", "jareta-vichy-negra-cerezas.jpg"],
     precio: null,
     medidas: null,
     personalizable: false,
-    desc: "Bolsa de jareta en tela de cuadros vichy con cerezas bordadas."
+    desc: "Bolsa de jareta en tela de cuadros vichy con cerezas bordadas en relieve."
   },
   {
     nombre: "Cosmetiquera Jirafas",
@@ -69,7 +69,7 @@ var PRODUCTOS = [
   {
     nombre: "Bolsa Corazones",
     cat: "jareta",
-    fotos: ["mezclilla-corazones-1.jpg", "mezclilla-corazones-2.jpg", "mezclilla-corazones-3.jpg"],
+    fotos: ["bolsa-mezclilla-corazones-1.jpg"],
     precio: null,
     medidas: null,
     personalizable: false,
@@ -78,16 +78,16 @@ var PRODUCTOS = [
   {
     nombre: "Tote Bolsillos",
     cat: "tote",
-    fotos: ["tote-bolsillos-negra.jpg", "tote-bolsillos-olivo.jpg", "tote-bolsillos-olivo-look.jpg"],
+    fotos: ["tote-bolsillos-olivo-mural.jpg", "tote-bolsillos-negra.jpg"],
     precio: null,
     medidas: null,
     personalizable: false,
-    desc: "Tote de lona con bolsillos al frente y llavero de corazón bordado. En negro y verde olivo."
+    desc: "Tote de lona con bolsillos al frente y llavero de corazón bordado. En verde olivo y negro."
   },
   {
     nombre: "Bolsa Estrellas",
     cat: "jareta",
-    fotos: ["jareta-estrellas.jpg"],
+    fotos: ["jareta-terciopelo-estrellas.jpg"],
     precio: null,
     medidas: null,
     personalizable: false,
@@ -96,16 +96,16 @@ var PRODUCTOS = [
   {
     nombre: "Tote Polillas",
     cat: "tote",
-    fotos: ["tote-polillas.jpg"],
+    fotos: ["tote-polillas-mono.jpg"],
     precio: null,
     medidas: null,
     personalizable: false,
-    desc: "Tote de tela clara con polillas bordadas en azul marino y moño de vichy."
+    desc: "Tote de tela clara con polillas bordadas en azul marino y moño de cuadros vichy."
   },
   {
     nombre: "Bolsa Cereza",
     cat: "jareta",
-    fotos: ["jareta-cereza.jpg"],
+    fotos: ["jareta-manta-cereza.jpg"],
     precio: null,
     medidas: null,
     personalizable: false,
@@ -123,7 +123,7 @@ var PRODUCTOS = [
   {
     nombre: "Cosmetiquera Ojo",
     cat: "cosmetiquera",
-    fotos: ["cosmetiquera-ojo.jpg"],
+    fotos: ["cosmetiquera-ojo-vino.jpg"],
     precio: null,
     medidas: null,
     personalizable: false,
@@ -132,7 +132,7 @@ var PRODUCTOS = [
   {
     nombre: "Bolsa Art déco",
     cat: "jareta",
-    fotos: ["jareta-deco.jpg"],
+    fotos: ["jareta-abanicos-artdeco.jpg"],
     precio: null,
     medidas: null,
     personalizable: false,
@@ -141,7 +141,7 @@ var PRODUCTOS = [
   {
     nombre: "Tote Mixteca",
     cat: "tote",
-    fotos: ["tote-mixteca.jpg"],
+    fotos: ["tote-manta-mixteca.jpg"],
     precio: null,
     medidas: null,
     personalizable: true,
@@ -150,16 +150,16 @@ var PRODUCTOS = [
   {
     nombre: "Bolsa Amuletos",
     cat: "jareta",
-    fotos: ["jareta-amuletos.jpg"],
+    fotos: ["jareta-manta-amuletos.jpg"],
     precio: null,
     medidas: null,
     personalizable: false,
     desc: "Bolsa de jareta con asas, cubierta de pequeños amuletos bordados a color."
   },
   {
-    nombre: "Tote Bosque",
+    nombre: "Tote Bosque Totoro",
     cat: "tote",
-    fotos: ["tote-bosque.jpg"],
+    fotos: ["tote-bosque-totoro.jpg"],
     precio: null,
     medidas: null,
     personalizable: false,
@@ -168,7 +168,7 @@ var PRODUCTOS = [
   {
     nombre: "Sudadera Perrito florido",
     cat: "ropa",
-    fotos: ["sudadera-perrito.jpg"],
+    fotos: ["sudadera-perrito-flores.jpg"],
     precio: null,
     medidas: null,
     personalizable: true,
@@ -262,12 +262,12 @@ var SHAPES = {
 };
 var CAT2PIEZA = { tote: "tote", jareta: "jareta", cosmetiquera: "cosmetiquera", ropa: "sudadera" };
 var IDEAS_BORDADO = [
-  { id: "perrito", n: "Mascota", img: "img/sudadera-perrito.jpg", desc: "Bordado de tu mascota favorita" },
-  { id: "ojo", n: "Ojo místico", img: "img/tote-ojo.jpg", desc: "Ojo protector con rayos dorados" },
-  { id: "cereza", n: "Cerezas", img: "img/jareta-cereza.jpg", desc: "Frutas y elementos botánicos" },
-  { id: "corazoncitos", n: "Corazoncitos", img: "img/tote-corazoncitos-1.jpg", desc: "Pequeños corazones bordados a mano" },
-  { id: "flores", n: "Flores", img: "img/jareta-vichy-rosa-1.jpg", desc: "Flores artesanales en relieve" },
-  { id: "jirafas", n: "Animales", img: "img/cosmetiquera-jirafas.jpg", desc: "Diseño tierno con árboles y sol" }
+  { id: "perrito", n: "Mascota", img: "img/sudadera-perrito-flores.jpg", desc: "Bordado de tu mascota favorita" },
+  { id: "ojo", n: "Ojo místico", img: "img/tote-ojo-mistico.jpg", desc: "Ojo protector con rayos dorados" },
+  { id: "cereza", n: "Cerezas", img: "img/jareta-manta-cereza.jpg", desc: "Frutas y elementos botánicos" },
+  { id: "corazoncitos", n: "Corazoncitos", img: "img/bolsa-mezclilla-corazones-1.jpg", desc: "Corazones bordados a mano" },
+  { id: "flores", n: "Flores", img: "img/jareta-vichy-rosa-flores.jpg", desc: "Flores artesanales en relieve" },
+  { id: "jirafas", n: "Jirafas", img: "img/cosmetiquera-jirafas.jpg", desc: "Diseño tierno con árboles y sol" }
 ];
 
 // rococo-handmade/js/mvc/Model.js
