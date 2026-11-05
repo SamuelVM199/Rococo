@@ -270,15 +270,6 @@ section, [id]{scroll-margin-top:calc(var(--hh, 70px) + 16px);padding-block:10px}
 .preview{flex:1 1 340px;max-width:460px}
 .cap{margin-top:12px;display:flex;flex-direction:column;gap:6px}
 .cap span{font-size:.9rem;color:var(--muted)}
-.pv-panel{margin-top:16px;display:flex;flex-direction:column;gap:14px}
-.pv-sub{font-size:.84rem;font-weight:700;color:var(--navy);display:block;margin-bottom:6px}
-
-.pv-ideas-box{background:var(--card);border:1.5px dashed var(--line);border-radius:var(--r);padding:14px}
-.pv-ideas-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
-.pv-idea-chip{all:unset;display:inline-flex;align-items:center;gap:6px;background:var(--paper);border:1.5px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.84rem;font-weight:600;color:var(--navy);cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
-.pv-idea-chip:hover{background:var(--pink-deep);border-color:var(--navy);transform:translateY(-1px)}
-.pv-idea-chip.active{background:var(--navy);color:var(--on-navy);border-color:var(--navy)}
-.pv-idea-chip img{width:20px;height:20px;border-radius:50%;object-fit:cover;display:block}
 /* Tarjeta destacada: Enviar diseño por WhatsApp con ejemplos */
 .diseno-notice-card{background:linear-gradient(135deg,var(--pink) 0%,var(--pink-deep) 100%);border:2px solid var(--navy);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 24px rgba(48,48,92,0.08);position:relative}
 .diseno-notice-header{display:flex;align-items:center;gap:14px}

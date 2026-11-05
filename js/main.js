@@ -1,5 +1,5 @@
 import config from "./config.js";
-import {PRODUCTOS, CATS, Q, SHAPES, CAT2PIEZA, IDEAS_BORDADO} from "./data/products.js";
+import {PRODUCTOS, CATS, Q, SHAPES, CAT2PIEZA} from "./data/products.js";
 import Model from "./mvc/Model.js";
 import View from "./mvc/View.js";
 import Controller from "./mvc/Controller.js";
@@ -7,7 +7,7 @@ import Router from "./router.js";
 
 function initApp() {
   try {
-    const model = Model({productos: PRODUCTOS, cats: CATS, q: Q, shapes: SHAPES, cat2pieza: CAT2PIEZA, ideas: IDEAS_BORDADO});
+    const model = Model({productos: PRODUCTOS, cats: CATS, q: Q, shapes: SHAPES, cat2pieza: CAT2PIEZA});
     const view = View(model, null);
     const controller = Controller(model, view, { ...config, cat2pieza: CAT2PIEZA });
     if (view && view.setController) view.setController(controller);
@@ -18,7 +18,6 @@ function initApp() {
     view.renderFilters();
     view.renderGrid();
     view.buildOpts();
-    if (view.buildIdeas) view.buildIdeas();
     view.renderCotizador();
     router.init();
   } catch (err) {

@@ -1,5 +1,5 @@
 /* Modelo: estado único de la aplicación. No toca el DOM. */
-export default function Model({productos, cats, q, shapes, cat2pieza, ideas}) {
+export default function Model({productos, cats, q, shapes, cat2pieza}) {
   let filtro = "todo";
   let abierto = null;          // índice del producto abierto en el visor
   let ultimaCat = "tote";      // última categoría vista (para "Personalizar una así")
@@ -8,8 +8,6 @@ export default function Model({productos, cats, q, shapes, cat2pieza, ideas}) {
   const st = {
     pieza: "tote", tela: 0, letra: 0, tam: 1, pos: "centro",
     hilos: [0],
-    ideaSugerida: null, // nombre de idea sugerida si se seleccionó una
-    ideaImg: null,      // imagen de la idea seleccionada
   };
 
   return {
@@ -42,18 +40,8 @@ export default function Model({productos, cats, q, shapes, cat2pieza, ideas}) {
     setTam(i) { st.tam = i; },
     setPos(v) { st.pos = v; },
     setHilos(idxs) { st.hilos = idxs; },
-    setIdeaSugerida(idea) {
-      if (!idea) {
-        st.ideaSugerida = null;
-        st.ideaImg = null;
-        return;
-      }
-      st.ideaSugerida = idea.n;
-      st.ideaImg = idea.img || null;
-    },
     getQ() { return q; },
     getShapes() { return shapes; },
     getCat2Pieza() { return cat2pieza; },
-    getIdeas() { return ideas || []; },
   };
 }

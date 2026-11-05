@@ -177,27 +177,6 @@ export default function View(model, initialCb) {
     chips($("#o-hilo"), q.hilos, "hilo", "checkbox", (it, i) => st.hilos.includes(i), it => sw(it.c) + it.n);
   };
 
-  self.buildIdeas = () => {
-    const ideas = model.getIdeas ? model.getIdeas() : [];
-    const box = $("#pv-ideas-chips");
-    if (!box) return;
-    const st = model.getState();
-    box.innerHTML = ideas.map(idea => {
-      const isAct = st.ideaSugerida === idea.n;
-      return `<button type="button" class="pv-idea-chip ${isAct ? 'active' : ''}" data-id="${esc(idea.id)}" title="${esc(idea.desc)}">
-        <img src="${esc(idea.img)}" alt="">
-        <span>${esc(idea.n)}</span>
-      </button>`;
-    }).join("");
-    $$(".pv-idea-chip", btn => {
-      btn.onclick = () => {
-        const id = btn.dataset.id;
-        const idea = ideas.find(it => it.id === id);
-        if (idea && cb && cb.onIdea) cb.onIdea(idea);
-      };
-    });
-  };
-
 
   self.renderCotizador = () => {
     const q = model.getQ();
@@ -218,24 +197,14 @@ export default function View(model, initialCb) {
     if (st.pos === "esquina") { cx += sh.area.w * 0.34; cy += sh.area.w * 0.32; }
     if (st.pos === "arriba")  { cx -= sh.area.w * 0.3;  cy -= sh.area.w * 0.3;  }
 
-    const hasImg = !!st.ideaImg;
-    const imgH = W;
     const fs = Math.max(10, W / Math.max(4, txt.length * 0.55)) * le.k * 0.9;
-    const textH = txt ? fs * 1.15 : 0;
-    const totalH = (hasImg ? imgH : 0) + (hasImg && txt ? 8 : 0) + textH;
-    const top = cy - totalH / 2;
     let design = "";
-    if (hasImg) {
-      design += `<image href="${st.ideaImg}" x="${cx - imgH / 2}" y="${top}" width="${imgH}" height="${imgH}" preserveAspectRatio="xMidYMid meet"/>`;
-    }
-    const textY = top + (hasImg ? imgH + 8 : 0) + fs * 0.85;
     if (txt) {
-      design += `<text x="${cx}" y="${textY}" text-anchor="middle" font-family="${le.f}" font-size="${fs.toFixed(1)}" fill="${col}" stroke-width="${multi !== col ? 0.8 : 0}" stroke="${multi}">${esc(txt)}</text>`;
+      design += `<text x="${cx}" y="${cy + fs * 0.35}" text-anchor="middle" font-family="${le.f}" font-size="${fs.toFixed(1)}" fill="${col}" stroke-width="${multi !== col ? 0.8 : 0}" stroke="${multi}">${esc(txt)}</text>`;
+    } else {
+      design = `<text x="${cx}" y="${cy}" text-anchor="middle" font-family="Quicksand, sans-serif" font-size="13" fill="${dark ? '#fdf0f5' : '#6b5f7a'}">Tu bordado aquí</text>`;
     }
-    if (!hasImg && !txt) {
-      design = `<text x="${cx}" y="${cy}" text-anchor="middle" font-family="Quicksand, sans-serif" font-size="13" fill="${dark ? '#fdf0f5' : '#6b5f7a'}">Tu diseño o idea aquí</text>`;
-    }
-    const r = Math.max(W, Math.max(totalH, W * 0.85)) / 2 + 14;
+    const r = W / 2 + 14;
     const pv = $("#pv");
     if (pv) {
       pv.innerHTML = `<rect width="400" height="440" fill="transparent"/>${sh.draw(tela.c)}
@@ -243,11 +212,7 @@ export default function View(model, initialCb) {
     }
     const pvCap = $("#pv-cap");
     if (pvCap) {
-      let capExtra = "";
-      if (st.ideaSugerida) {
-        capExtra = ` · Idea: <b>${esc(st.ideaSugerida)}</b>`;
-      }
-      pvCap.innerHTML = `<b>${q.piezas.find(p => p.id === st.pieza).n}</b> · ${tela.n} · ${tam.n} (${tam.d})${capExtra}`;
+      pvCap.innerHTML = `<b>${q.piezas.find(p => p.id === st.pieza).n}</b> · ${tela.n} · ${tam.n} (${tam.d})`;
     }
     self.progress();
   };
@@ -258,7 +223,7 @@ export default function View(model, initialCb) {
     const txt = txtInput ? txtInput.value.trim() : "";
     const nameInput = $("#q-nombre");
     const nameVal = nameInput ? nameInput.value.trim() : "";
-    const done = [true, !!(st.ideaSugerida || txt), st.hilos.length > 0, !!nameVal];
+    const done = [true, true, st.hilos.length > 0, !!nameVal];
     done.forEach((d, i) => { const el = $("#ok" + (i + 1)); if (el) el.textContent = d ? "✓ listo" : ""; });
     const prog = $("#qprog"); if (prog) prog.style.width = (done.filter(Boolean).length / 4 * 100) + "%";
   };

@@ -24,11 +24,6 @@ export default function Controller(model, view, config) {
     onTam: i => { model.setTam(i); view.renderCotizador(); },
     onPos: v => { model.setPos(v); view.renderCotizador(); },
     onHilos: idxs => { model.setHilos(idxs); view.renderCotizador(); },
-    onIdea: idea => {
-      model.setIdeaSugerida(idea);
-      view.renderCotizador();
-      view.buildIdeas();
-    },
     onEnviar: st => {
       const msg = cb.mensaje();
       const url = "https://wa.me/" + config.whatsapp + "?text=" + encodeURIComponent(msg);
@@ -98,9 +93,7 @@ export default function Controller(model, view, config) {
         }
       }
 
-      let disenoTexto = st.ideaSugerida
-        ? `Idea de catálogo: «${st.ideaSugerida}» (adjunto imagen en el chat)`
-        : "Adjunto la foto o dibujo de mi diseño en este chat";
+      let disenoTexto = "Adjunto la foto o dibujo de mi diseño en este chat";
 
       const lines = [
         "✨ *Solicitud de Cotización Personalizada - Rococó Handmade* ✨",

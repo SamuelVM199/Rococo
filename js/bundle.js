@@ -261,17 +261,9 @@ var SHAPES = {
   }
 };
 var CAT2PIEZA = { tote: "tote", jareta: "jareta", cosmetiquera: "cosmetiquera", ropa: "sudadera" };
-var IDEAS_BORDADO = [
-  { id: "perrito", n: "Mascota", img: "img/sudadera-perrito-flores.jpg", desc: "Bordado de tu mascota favorita" },
-  { id: "ojo", n: "Ojo místico", img: "img/tote-ojo-mistico.jpg", desc: "Ojo protector con rayos dorados" },
-  { id: "cereza", n: "Cerezas", img: "img/jareta-manta-cereza.jpg", desc: "Frutas y elementos botánicos" },
-  { id: "corazoncitos", n: "Corazoncitos", img: "img/bolsa-mezclilla-corazones-1.jpg", desc: "Corazones bordados a mano" },
-  { id: "flores", n: "Flores", img: "img/jareta-vichy-rosa-flores.jpg", desc: "Flores artesanales en relieve" },
-  { id: "jirafas", n: "Jirafas", img: "img/cosmetiquera-jirafas.jpg", desc: "Diseño tierno con árboles y sol" }
-];
 
 // rococo-handmade/js/mvc/Model.js
-function Model({ productos, cats, q, shapes, cat2pieza, ideas }) {
+function Model({ productos, cats, q, shapes, cat2pieza }) {
   let filtro = "todo";
   let abierto = null;
   let ultimaCat = "tote";
@@ -281,9 +273,7 @@ function Model({ productos, cats, q, shapes, cat2pieza, ideas }) {
     letra: 0,
     tam: 1,
     pos: "centro",
-    hilos: [0],
-    ideaSugerida: null,
-    ideaImg: null
+    hilos: [0]
   };
   return {
     getFiltro() {
@@ -341,15 +331,6 @@ function Model({ productos, cats, q, shapes, cat2pieza, ideas }) {
     setHilos(idxs) {
       st.hilos = idxs;
     },
-    setIdeaSugerida(idea) {
-      if (!idea) {
-        st.ideaSugerida = null;
-        st.ideaImg = null;
-        return;
-      }
-      st.ideaSugerida = idea.n;
-      st.ideaImg = idea.img || null;
-    },
     getQ() {
       return q;
     },
@@ -358,9 +339,6 @@ function Model({ productos, cats, q, shapes, cat2pieza, ideas }) {
     },
     getCat2Pieza() {
       return cat2pieza;
-    },
-    getIdeas() {
-      return ideas || [];
     }
   };
 }
@@ -560,28 +538,6 @@ function View(model, initialCb) {
     chips($("#o-pos"), q.posiciones, "pos", "radio", (it) => it.id === st.pos, (it) => it.n);
     chips($("#o-hilo"), q.hilos, "hilo", "checkbox", (it, i) => st.hilos.includes(i), (it) => sw(it.c) + it.n);
   };
-  self.buildIdeas = () => {
-    const ideas = model.getIdeas ? model.getIdeas() : [];
-    const box = $("#pv-ideas-chips");
-    if (!box)
-      return;
-    const st = model.getState();
-    box.innerHTML = ideas.map((idea) => {
-      const isAct = st.ideaSugerida === idea.n;
-      return `<button type="button" class="pv-idea-chip ${isAct ? "active" : ""}" data-id="${esc(idea.id)}" title="${esc(idea.desc)}">
-        <img src="${esc(idea.img)}" alt="">
-        <span>${esc(idea.n)}</span>
-      </button>`;
-    }).join("");
-    $$(".pv-idea-chip", (btn) => {
-      btn.onclick = () => {
-        const id = btn.dataset.id;
-        const idea = ideas.find((it) => it.id === id);
-        if (idea && cb && cb.onIdea)
-          cb.onIdea(idea);
-      };
-    });
-  };
   self.renderCotizador = () => {
     const q = model.getQ();
     const shapes = model.getShapes();
@@ -607,24 +563,14 @@ function View(model, initialCb) {
       cx -= sh.area.w * 0.3;
       cy -= sh.area.w * 0.3;
     }
-    const hasImg = !!st.ideaImg;
-    const imgH = W;
     const fs = Math.max(10, W / Math.max(4, txt.length * 0.55)) * le.k * 0.9;
-    const textH = txt ? fs * 1.15 : 0;
-    const totalH = (hasImg ? imgH : 0) + (hasImg && txt ? 8 : 0) + textH;
-    const top = cy - totalH / 2;
     let design = "";
-    if (hasImg) {
-      design += `<image href="${st.ideaImg}" x="${cx - imgH / 2}" y="${top}" width="${imgH}" height="${imgH}" preserveAspectRatio="xMidYMid meet"/>`;
-    }
-    const textY = top + (hasImg ? imgH + 8 : 0) + fs * 0.85;
     if (txt) {
-      design += `<text x="${cx}" y="${textY}" text-anchor="middle" font-family="${le.f}" font-size="${fs.toFixed(1)}" fill="${col}" stroke-width="${multi !== col ? 0.8 : 0}" stroke="${multi}">${esc(txt)}</text>`;
+      design += `<text x="${cx}" y="${cy + fs * 0.35}" text-anchor="middle" font-family="${le.f}" font-size="${fs.toFixed(1)}" fill="${col}" stroke-width="${multi !== col ? 0.8 : 0}" stroke="${multi}">${esc(txt)}</text>`;
+    } else {
+      design = `<text x="${cx}" y="${cy}" text-anchor="middle" font-family="Quicksand, sans-serif" font-size="13" fill="${dark ? "#fdf0f5" : "#6b5f7a"}">Tu bordado aquí</text>`;
     }
-    if (!hasImg && !txt) {
-      design = `<text x="${cx}" y="${cy}" text-anchor="middle" font-family="Quicksand, sans-serif" font-size="13" fill="${dark ? "#fdf0f5" : "#6b5f7a"}">Tu diseño o idea aquí</text>`;
-    }
-    const r = Math.max(W, Math.max(totalH, W * 0.85)) / 2 + 14;
+    const r = W / 2 + 14;
     const pv = $("#pv");
     if (pv) {
       pv.innerHTML = `<rect width="400" height="440" fill="transparent"/>${sh.draw(tela.c)}
@@ -632,11 +578,7 @@ function View(model, initialCb) {
     }
     const pvCap = $("#pv-cap");
     if (pvCap) {
-      let capExtra = "";
-      if (st.ideaSugerida) {
-        capExtra = ` · Idea: <b>${esc(st.ideaSugerida)}</b>`;
-      }
-      pvCap.innerHTML = `<b>${q.piezas.find((p) => p.id === st.pieza).n}</b> · ${tela.n} · ${tam.n} (${tam.d})${capExtra}`;
+      pvCap.innerHTML = `<b>${q.piezas.find((p) => p.id === st.pieza).n}</b> · ${tela.n} · ${tam.n} (${tam.d})`;
     }
     self.progress();
   };
@@ -646,7 +588,7 @@ function View(model, initialCb) {
     const txt = txtInput ? txtInput.value.trim() : "";
     const nameInput = $("#q-nombre");
     const nameVal = nameInput ? nameInput.value.trim() : "";
-    const done = [true, !!(st.ideaSugerida || txt), st.hilos.length > 0, !!nameVal];
+    const done = [true, true, st.hilos.length > 0, !!nameVal];
     done.forEach((d, i) => {
       const el = $("#ok" + (i + 1));
       if (el)
@@ -770,11 +712,6 @@ function Controller(model, view, config) {
       model.setHilos(idxs);
       view.renderCotizador();
     },
-    onIdea: (idea) => {
-      model.setIdeaSugerida(idea);
-      view.renderCotizador();
-      view.buildIdeas();
-    },
     onEnviar: (st) => {
       const msg = cb.mensaje();
       const url = "https://wa.me/" + config.whatsapp + "?text=" + encodeURIComponent(msg);
@@ -835,7 +772,7 @@ function Controller(model, view, config) {
           fechaStr = fechaVal;
         }
       }
-      let disenoTexto = st.ideaSugerida ? `Idea de catálogo: «${st.ideaSugerida}» (adjunto imagen en el chat)` : "Adjunto la foto o dibujo de mi diseño en este chat";
+      let disenoTexto = "Adjunto la foto o dibujo de mi diseño en este chat";
       const lines = [
         "✨ *Solicitud de Cotización Personalizada - Rococó Handmade* ✨",
         "",
@@ -938,7 +875,7 @@ function Router() {
 // rococo-handmade/js/main.js
 function initApp() {
   try {
-    const model = Model({ productos: PRODUCTOS, cats: CATS, q: Q, shapes: SHAPES, cat2pieza: CAT2PIEZA, ideas: IDEAS_BORDADO });
+    const model = Model({ productos: PRODUCTOS, cats: CATS, q: Q, shapes: SHAPES, cat2pieza: CAT2PIEZA });
     const view = View(model, null);
     const controller = Controller(model, view, { ...config_default, cat2pieza: CAT2PIEZA });
     if (view && view.setController)
@@ -949,8 +886,6 @@ function initApp() {
     view.renderFilters();
     view.renderGrid();
     view.buildOpts();
-    if (view.buildIdeas)
-      view.buildIdeas();
     view.renderCotizador();
     router.init();
   } catch (err) {
