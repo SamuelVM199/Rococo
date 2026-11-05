@@ -147,11 +147,6 @@
             <div class="cap"><span id="pv-cap">Tote bag · Manta natural · Mediano (hasta 10 cm)</span><span>Vista previa ilustrativa</span></div>
 
             <div class="pv-panel" id="pv-panel">
-              <div id="pv-fotos-strip" class="pv-fotos-strip" hidden>
-                <span class="pv-sub">Tus fotografías de diseño (toca para ver en la pieza):</span>
-                <div id="pv-fotos-thumbs" class="pv-thumbs-row"></div>
-              </div>
-
               <div class="pv-ideas-box" id="pv-ideas-box">
                 <span class="pv-sub">💡 ¿Buscas ideas? Toca una para verla en la pieza:</span>
                 <div id="pv-ideas-chips" class="pv-ideas-chips"></div>
@@ -172,29 +167,43 @@
             <fieldset>
               <legend><span class="num">2</span>Tu diseño de bordado <span class="ok" id="ok2"></span></legend>
               
-              <!-- Anuncio exclusivo para computadoras -->
-              <div class="mobile-notice" id="notice-desktop-foto">
-                <span class="mobile-notice-tag">📱 Función solo disponible en dispositivos móviles</span>
-                <p>Para adjuntar fotografías de tu diseño directamente a WhatsApp, ingresa a este cotizador desde tu teléfono celular. En computadora puedes describir tu idea en las notas o escribir el texto que deseas bordar.</p>
-              </div>
+              <!-- Tarjeta destacada con aviso e instructivo visual de WhatsApp -->
+              <div class="diseno-notice-card" role="region" aria-label="Aviso sobre el envío del diseño">
+                <div class="diseno-notice-header">
+                  <div class="diseno-notice-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Z"/></svg>
+                  </div>
+                  <div>
+                    <span class="diseno-notice-tag">Paso importante</span>
+                    <h3 class="diseno-notice-title">Favor de mandar tu diseño por WhatsApp</h3>
+                  </div>
+                </div>
+                <p class="diseno-notice-text">
+                  Para cotizarte con precisión y cuidar cada detalle de tus puntadas, <strong>mándanos la foto o dibujo de tu idea directamente a nuestro WhatsApp</strong> al enviar esta solicitud.
+                </p>
 
-              <!-- Subida de fotografías para dispositivos móviles -->
-              <div id="wrap-mobile-foto" hidden>
-                <label class="drop" id="drop" for="q-foto">
-                  <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="17 8 12 3 7 8"/>
-                    <line x1="12" y1="3" x2="12" y2="15"/>
-                  </svg>
-                  <span class="t">
-                    <b id="drop-t">Sube tus fotos o dibujos del bordado</b>
-                    <span id="drop-s">Puedes seleccionar varias fotos (JPG o PNG). Toca aquí o arrástralas.</span>
-                  </span>
-                </label>
-                <input type="file" id="q-foto" accept="image/*" multiple hidden>
-                
-                <div id="q-fotos-list" class="fotos-list" hidden></div>
-                <button type="button" class="linkbtn" id="q-fotos-add" hidden style="margin-top:4px">+ Agregar más fotografías</button>
+                <!-- Pequeño ejemplo visual ilustrativo -->
+                <div class="diseno-ejemplo">
+                  <span class="diseno-ejemplo-label">Ejemplos de lo que puedes mandar en el chat:</span>
+                  <div class="diseno-ejemplo-items">
+                    <figure class="ejemplo-item">
+                      <img src="img/sudadera-perrito.jpg" alt="Ejemplo: foto de mascota">
+                      <figcaption>Foto de mascota</figcaption>
+                    </figure>
+                    <figure class="ejemplo-item">
+                      <img src="img/tote-ojo.jpg" alt="Ejemplo: dibujo en papel">
+                      <figcaption>Dibujo o boceto</figcaption>
+                    </figure>
+                    <figure class="ejemplo-item">
+                      <img src="img/jareta-cereza.jpg" alt="Ejemplo: foto de internet">
+                      <figcaption>Imagen de internet</figcaption>
+                    </figure>
+                  </div>
+                  <div class="diseno-paso-tip">
+                    <span class="tip-badge">CÓMO ADJUNTAR</span>
+                    <span>Al abrirse WhatsApp, solo toca el icono de <strong>clip 📎</strong> o <strong>cámara 📷</strong> y adjunta tu foto.</span>
+                  </div>
+                </div>
               </div>
               <div class="fld" style="margin-top:8px">
                 <label class="lbl" for="q-texto">Texto bordado (opcional)</label>
@@ -458,6 +467,6 @@
     </div>
   </dialog>
 
-  <script defer src="js/bundle.js?v=10"></script>
+  <script defer src="js/bundle.js?v=11"></script>
 </body>
 </html>

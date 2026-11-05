@@ -24,33 +24,9 @@ export default function Controller(model, view, config) {
     onTam: i => { model.setTam(i); view.renderCotizador(); },
     onPos: v => { model.setPos(v); view.renderCotizador(); },
     onHilos: idxs => { model.setHilos(idxs); view.renderCotizador(); },
-    onFoto: (dataUrl, nombre, rawFile) => {
-      model.addFoto(dataUrl, nombre, false, rawFile);
-      view.renderCotizador();
-      view.renderFotos();
-      view.buildIdeas();
-    },
-    onPickFoto: idx => {
-      model.setFotoActiva(idx);
-      view.renderCotizador();
-      view.renderFotos();
-    },
-    onDelFoto: idx => {
-      model.removeFoto(idx);
-      view.renderCotizador();
-      view.renderFotos();
-      view.buildIdeas();
-    },
     onIdea: idea => {
       model.setIdeaSugerida(idea);
       view.renderCotizador();
-      view.renderFotos();
-      view.buildIdeas();
-    },
-    limpiarFoto: () => {
-      model.limpiarFotos();
-      view.renderCotizador();
-      view.renderFotos();
       view.buildIdeas();
     },
     onEnviar: st => {
@@ -122,19 +98,9 @@ export default function Controller(model, view, config) {
         }
       }
 
-      let disenoTexto = "Sin fotos adjuntas (ver texto y notas)";
-      const fotosReales = (st.fotos || []).filter(f => !f.isIdea);
-      const isMobile = typeof navigator !== "undefined" && (
-        /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-        (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent))
-      );
-
-      if (isMobile && fotosReales.length > 0) {
-        const nombres = fotosReales.map(f => f.name).join(", ");
-        disenoTexto = `${fotosReales.length} fotografía(s) adjunta(s): ${nombres}`;
-      } else if (st.ideaSugerida) {
-        disenoTexto = `Idea de catálogo: «${st.ideaSugerida}»`;
-      }
+      let disenoTexto = st.ideaSugerida
+        ? `Idea de catálogo: «${st.ideaSugerida}» (adjunto imagen en el chat)`
+        : "Adjunto la foto o dibujo de mi diseño en este chat";
 
       const lines = [
         "✨ *Solicitud de Cotización Personalizada - Rococó Handmade* ✨",
@@ -161,11 +127,7 @@ export default function Controller(model, view, config) {
         "• Notas para la bordadora: " + (notas || "Ninguna"),
       ];
 
-      if (isMobile && fotosReales.length > 0) {
-        lines.push("", `📎 _(Adjunto mis ${fotosReales.length} fotografía(s) de diseño en este mensaje)_`);
-      } else if (st.ideaSugerida) {
-        lines.push("", `💡 _(Me gustaría un diseño basado en la idea de: ${st.ideaSugerida})_`);
-      }
+      lines.push("", "📎 _(Favor de revisar la foto o dibujo de mi diseño que enviaré en este chat de WhatsApp)_");
 
       return lines.join("\n");
     },

@@ -19,7 +19,6 @@ function initApp() {
     view.renderGrid();
     view.buildOpts();
     if (view.buildIdeas) view.buildIdeas();
-    if (view.renderFotos) view.renderFotos();
     view.renderCotizador();
     router.init();
   } catch (err) {
